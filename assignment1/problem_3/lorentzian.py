@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-x = np.linspace(-np.pi/2,np.pi/2,100)
-y = np.cos(x)
-xp = np.linspace(-np.pi/2,np.pi/2,10)
-yp = np.cos(xp)
+x = np.linspace(-1,1,100)
+y = 1/(1+x**2)
+xp = np.linspace(-1,1,10)
+yp = 1/(1+xp**2)
 plt.plot(xp,yp, "x")
-plt.plot(x,y,label="cos(x)")
+plt.plot(x,y,label="Lorentzian")
 
 #Polynomial interpolation (we shall use 10 points for each interpolation i.e. a polynomial of order n-1=9)
 ord = 9
