@@ -23,4 +23,4 @@ for d in 10**delta:
 
 deltaopt1 = 10**delta[diffs1.index(min(diffs1))] #finding the value of delta
 deltaopt2 = 10**delta[diffs2.index(min(diffs2))] #finding the value of delta
-print(deltaopt1, deltaopt2)
+print("𝛿 e^x =",deltaopt1, "𝛿 e^0.01x =", deltaopt2)

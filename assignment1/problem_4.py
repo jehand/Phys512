@@ -5,7 +5,7 @@ import scipy.constants as con
 from integrate_variable import integrate_step
 
 e0 = con.epsilon_0
-d = np.linspace(0,0.7,21)
+d = np.linspace(0,2,101)
 #We can always align our axis in such a way that z represents the distance from the shell.
 #Let's use the function given by Griffiths Problem 2.7; we can use the substituted integral with respect to u.
 #However, we can write the function in terms of z/R and therefore, the distance z can be written in terms of R.
@@ -19,7 +19,8 @@ def E(u,z):
 #Integrator
 Eqint = []
 for z in d: #Integrating for each distance z
-    Eqint.append(integrate_step(E,z,-1,1,0.001))
+    if 0.7<=z<=1.4: Eqint.append(float("nan"))
+    else: Eqint.append(integrate_step(E,z,-1,1,0.001))
 
 plt.plot(d,Eqint,label="Your Integrator")
 
@@ -31,6 +32,7 @@ plt.plot(d,Eq,label="scipy.quad")
 plt.xlabel(r"$\frac{z}{R}$", fontsize=18)
 plt.ylabel(r"$\frac{E}{\sigma}$", fontsize=18)
 plt.legend()
+plt.savefig("problem_4_plot.png", bbox_inches="tight", dpi=500)
 plt.show()
 
 """
