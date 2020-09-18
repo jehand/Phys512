@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-nps = 5 #number of points
+nps = 8 #number of points
 x = np.linspace(-1,1,100) #For the plot
 y = 1/(1+x**2) #For the plot
 xp = np.linspace(-1,1,nps) #Number of points being used
@@ -24,7 +24,7 @@ plt.plot(x,y-yspln,label="Cubic Spline")
 print("Cubic Spline Std=",np.std(yspln-y, ddof=1))
 
 #Rational Function (using the functions from lectures)
-n,m = int(nps/2) + 1, int(nps/2) #as the function is concave down, m>n, n+m-1 = nps.
+n,m = 4,5 #as the rational approximation gives an infinite order on the numerator and order 0 on the denominator we take n>m
 p,q = rat_fit(xp,yp,n,m)
 yrat = rat_eval(p,q,x)
 plt.plot(x,y-yrat, label="Rational")

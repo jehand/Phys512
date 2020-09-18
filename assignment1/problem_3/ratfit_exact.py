@@ -18,9 +18,10 @@ def rat_fit(x,y,n,m):
         mat[:,i]=x**i
     for i in range(1,m):
         mat[:,i-1+n]=-y*x**i
-    pars=np.dot(np.linalg.inv(mat),y)
+    pars=np.dot(np.linalg.pinv(mat),y)
     p=pars[:n]
     q=pars[n:]
+    print("p=",p,"q=",q)
     return p,q
 
 #1*p0 + x*p1 +x**2+p2+... -q1*x - q2*x**2... = y
