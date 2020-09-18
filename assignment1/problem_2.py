@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 data = np.loadtxt("lakeshore.txt") 
 
@@ -43,3 +44,26 @@ Tarb = ((Varb-V[ind])/(dV[ind]/1000)) + T[ind]
 Terr = np.abs(Tarb-(((Varb-Verr[inderr])/(dVerr[inderr]/1000)) + Terr[inderr])) #subtracting the prediction of Terr from Tarb to get an error
 
 print("Tarb=", Tarb, "±", Terr)
+
+"""
+We can also now see the error in our fit if we plot the results of our interpolation. 
+"""
+
+#First we make a function to give us all the Temperatures
+def Ts(Varbs):
+    ind = (np.abs(V-Varbs)).argmin()
+    Tarb = ((Varbs-V[ind])/(dV[ind]/1000)) + T[ind]
+    return Tarb
+
+Vs = np.linspace(0.1,1.64,100) #Creating a list of spaced Voltages
+Temps = []
+for i in Vs:
+    Temps.append(Ts(i))
+
+plt.plot(T,V,"kx",label="Lakeshore 670 Diode")
+plt.plot(Temps,Vs,"r-",label="Linear Interpolation")
+plt.xlabel("Temperature (K)", fontsize=12)
+plt.ylabel("Voltage (V)", fontsize=12)
+plt.legend()
+plt.savefig("problem_2_plot.png",bbox_inches="tight", dpi=500)
+plt.show()

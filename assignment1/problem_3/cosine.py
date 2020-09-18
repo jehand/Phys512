@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-x = np.linspace(-np.pi/2,np.pi/2,100)
+x = np.linspace(-np.pi/2,np.pi/2,100) 
 y = np.cos(x)
 xp = np.linspace(-np.pi/2,np.pi/2,10)
 yp = np.cos(xp)
