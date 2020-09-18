@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-nps = 6 #number of points
+nps = 5 #number of points
 x = np.linspace(-1,1,100) #For the plot
 y = 1/(1+x**2) #For the plot
 xp = np.linspace(-1,1,nps) #Number of points being used
@@ -12,10 +12,8 @@ yp = 1/(1+xp**2) #Values at these points
 #Polynomial interpolation (we shall use nps points for each interpolation, however to match the order of rational, we have
 #ord = nps+1). 
 ord = nps+1
-coeffs = np.polyfit(x,y,deg=ord)
+coeffs = np.polyfit(xp,yp,deg=ord)
 ypoly = np.polyval(coeffs, x)
-coeffsp= np.polyfit(xp,yp,deg=ord)
-yppoly = np.polyval(coeffsp, xp)
 plt.plot(x,y-ypoly,label="Polynomial")
 print("Polynomial Std=",np.std(ypoly-y, ddof=1))
 
@@ -33,4 +31,5 @@ plt.plot(x,y-yrat, label="Rational")
 print("Rational Std=", np.std(yrat-y, ddof=1))
 
 plt.legend()
+plt.savefig("lor_interpolation.png", bbox_inches="tight", dpi=500)
 plt.show()

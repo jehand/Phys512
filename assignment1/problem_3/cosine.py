@@ -12,10 +12,8 @@ yp = np.cos(xp) #Cosine values for these points
 #Polynomial interpolation (we shall use nps points for each interpolation, however to match the order of rational, we have
 #ord = nps+1). 
 ord = nps+1
-coeffs = np.polyfit(x,y,deg=ord)
+coeffs = np.polyfit(xp,yp,deg=ord)
 ypoly = np.polyval(coeffs, x)
-coeffsp= np.polyfit(xp,yp,deg=ord)
-yppoly = np.polyval(coeffsp, xp)
 plt.plot(x,y-ypoly,label="Polynomial")
 print("Polynomial Std=",np.std(ypoly-y, ddof=1))
 
@@ -34,4 +32,5 @@ plt.plot(x,y-yrat, label="Rational")
 print("Rational Std=", np.std(yrat-y, ddof=1))
 
 plt.legend()
+plt.savefig("cos_interpolation.png", bbox_inches="tight", dpi=500)
 plt.show()
