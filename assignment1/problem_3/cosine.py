@@ -3,15 +3,16 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-x = np.linspace(-np.pi/2,np.pi/2,100) 
-y = np.cos(x)
-xp = np.linspace(-np.pi/2,np.pi/2,10)
-yp = np.cos(xp)
+n = 10 #number of points
+x = np.linspace(-np.pi/2,np.pi/2,100) #For the plot
+y = np.cos(x) #For the plot
+xp = np.linspace(-np.pi/2,np.pi/2,n) #The number of points being used
+yp = np.cos(xp) #Cosine values for these points
 plt.plot(xp,yp, "x")
 plt.plot(x,y,label="cos(x)")
 
 #Polynomial interpolation (we shall use 10 points for each interpolation i.e. a polynomial of order n-1=9)
-ord = 9
+ord = n-1
 coeffs = np.polyfit(x,y,deg=ord)
 ypoly = np.polyval(coeffs, x)
 coeffsp= np.polyfit(xp,yp,deg=ord)

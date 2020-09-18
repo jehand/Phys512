@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 from ratfit_exact import rat_fit, rat_eval
 
-x = np.linspace(-1,1,100)
-y = 1/(1+x**2)
-xp = np.linspace(-1,1,10)
-yp = 1/(1+xp**2)
+x = np.linspace(-1,1,100) #For the plot
+y = 1/(1+x**2) #For the plot
+xp = np.linspace(-1,1,10) #Number of points being used
+yp = 1/(1+xp**2) #Values at these points
 plt.plot(xp,yp, "x")
 plt.plot(x,y,label="Lorentzian")
 
