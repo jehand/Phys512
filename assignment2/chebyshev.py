@@ -13,4 +13,4 @@ def cheby(x,y,ord):
     for i in range(1,ord):
         mat[:,i+1]=2*x*mat[:,i]-mat[:,i-1]
     coeffs = np.linalg.pinv(mat)@y
-    return np.polynomial.chebyshev.chebval(x,coeffs)
+    return np.polynomial.chebyshev.chebval(x,coeffs),coeffs
