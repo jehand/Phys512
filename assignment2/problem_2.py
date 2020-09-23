@@ -15,7 +15,7 @@ n = 1 #Truncated number
 c = cheby(x,y,ncheby,n) #Coefficients for the Cheby fit
 while max(np.abs(y-c))>=1e-6 and n<ncheby:
     c = cheby(x,y,ncheby,n)
-    n+=1t
+    n+=1
 n-=1
 print("Truncated Chebyshev Polynomial fit: truncated order =", n, "max error =", max(np.abs(y-c)), "RMS error =", np.std(y-c,ddof=1)) #ddof=1 for sample std.
 
