@@ -16,8 +16,8 @@ def radioactivity(t,y,half_life=half_lives): #To get the decay, we must muktiply
     return dydt*np.log(2)
 
 y0 = np.zeros(len(half_lives)+1); y0[0] = 1
-t = [0,0.5e9]
-times = np.linspace(min(t),max(t),1000)
+t = [0,0.5e7]
+times = np.linspace(min(t),max(t),10000)
 ans_stiff=integrate.solve_ivp(radioactivity,t,y0,method='Radau',t_eval=times)
 
 #Plotting ratio of Pb206 to U238, Pb206 is the last part of the decay chain.
@@ -26,10 +26,8 @@ ans_stiff=integrate.solve_ivp(radioactivity,t,y0,method='Radau',t_eval=times)
 
 #Plotting ratio of Th230 to U234, Th230 is the 5th element in the chain and U234 is the 4th element in the chain.
 plt.plot(ans_stiff.t,ans_stiff.y[4]/ans_stiff.y[3])
-plt.xlim(0,0.5e9)
 plt.ylabel(r"$\dfrac{\mathrm{^{230}Th}}{\mathrm{^{234}U}}$", fontsize=12)
 
 plt.xlabel("Time (years)", fontsize=12)
-#plt.ylabel("Quantity", fontsize=12)
-#plt.savefig("problem_3_plots.png", bbox_inches="tight", dpi=500)
+plt.savefig("problem_3_Th.png", bbox_inches="tight", dpi=500)
 plt.show()
