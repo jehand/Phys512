@@ -12,17 +12,22 @@ def radioactivity(t,y,half_life=half_lives): #To get the decay, we must muktiply
     dydt[0] = -(y[0]/half_life[0])
     for i in range(1,len(half_life)):
         dydt[i] = (y[i-1]/half_life[i-1] - y[i]/half_life[i])
-    dydt[-1]=y[-2]/half_life[-1] #[-1] does not work for some reason but this does? Weird.
+    dydt[-1]=y[-2]/half_life[-1]
     return dydt*np.log(2)
 
 y0 = np.zeros(len(half_lives)+1); y0[0] = 1
-t = [0,10e9]
+t = [0,0.5e9]
 times = np.linspace(min(t),max(t),1000)
 ans_stiff=integrate.solve_ivp(radioactivity,t,y0,method='Radau',t_eval=times)
 
 #Plotting ratio of Pb206 to U238, Pb206 is the last part of the decay chain.
-plt.plot(ans_stiff.t,ans_stiff.y[-1]/ans_stiff.y[0])
-plt.ylabel(r"$\dfrac{\mathrm{^{206}Pb}}{\mathrm{^{238}U}}$", fontsize=12)
+#plt.plot(ans_stiff.t,ans_stiff.y[-1]/ans_stiff.y[0])
+#plt.ylabel(r"$\dfrac{\mathrm{^{206}Pb}}{\mathrm{^{238}U}}$", fontsize=12)
+
+#Plotting ratio of Th230 to U234, Th230 is the 5th element in the chain and U234 is the 4th element in the chain.
+plt.plot(ans_stiff.t,ans_stiff.y[4]/ans_stiff.y[3])
+plt.xlim(0,0.5e9)
+plt.ylabel(r"$\dfrac{\mathrm{^{230}Th}}{\mathrm{^{234}U}}$", fontsize=12)
 
 plt.xlabel("Time (years)", fontsize=12)
 #plt.ylabel("Quantity", fontsize=12)

@@ -17,7 +17,7 @@ while max(np.abs(y-c))>=1e-6 and n<ncheby:
     c = cheby(x,y,ncheby,n)
     n+=1
 n-=1
-print("Truncated Chebyshev Polynomial fit: truncated order =", n, "max error =", max(np.abs(y-c)), "RMS error =", np.std(y-c,ddof=1)) #ddof=1 for sample std.
+print("Truncated Chebyshev Polynomial fit: truncated order =", n, ", max error =", max(np.abs(y-c)), ", RMS error =", np.std(y-c,ddof=1)) #ddof=1 for sample std.
 
 #Plotting the truncated fit
 plt.plot(x,y-c,"r-", label="Order " +str(ncheby)+ " Cheby truncated to order " + str(n))
@@ -25,12 +25,12 @@ plt.plot(x,y-c,"r-", label="Order " +str(ncheby)+ " Cheby truncated to order " +
 #Plotting the untruncated chebyshev polynomial of order 7
 cuy = cheby(x,y,n,n)
 plt.plot(x,y-cuy, "k-", label="Cheby polynomial of order 7")
-print("Untruncated Chebyshev Polynomial of rder =", n, "max error =", max(np.abs(y-cuy)), "RMS error =", np.std(y-cuy, ddof=1)) #ddof=1 for sample std.
+print("Untruncated Chebyshev Polynomial of order =", n, ", max error =", max(np.abs(y-cuy)), ", RMS error =", np.std(y-cuy, ddof=1)) #ddof=1 for sample std.
 
 #Polynomial fit
 coeffs = np.polynomial.legendre.legfit(x,y,n) #Using the same degree
 ly = np.polynomial.legendre.legval(x,coeffs)
-print("Polynomial fit: max error =", max(np.abs(y-ly)), "RMS error =", np.std(y-ly,ddof=1)) #ddof=1 for sample std.
+print("Polynomial fit: max error =", max(np.abs(y-ly)), ", RMS error =", np.std(y-ly,ddof=1)) #ddof=1 for sample std.
 plt.plot(x,y-ly,"--",label="Polynomial")
 plt.xlabel("x", fontsize=13)
 plt.ylabel("Residual", fontsize=13)

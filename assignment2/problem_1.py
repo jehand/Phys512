@@ -21,6 +21,6 @@ def semi_circle(x,r=1):
 #Comparing all these functions
 print("Gaussian number of reduced calls =", integrate_step(Gauss,-5,5,0.001)[1]-integrator(Gauss,-5,5,0.001)[1])
 print("√x number of reduced calls =", integrate_step(sqrt,0,5,0.001)[1]-integrator(sqrt,0,5,0.001)[1])
-print("|x| number of reduced calls =", integrate_step(sqrt,0,2,0.001)[1]-integrator(sqrt,0,2,0.001)[1])
+print("|x| number of reduced calls =", integrate_step(abs,-5,5,0.001)[1]-integrator(abs,-5,5,0.001)[1])
 print("xln(x) number of reduced calls =", integrate_step(log,0.5,5,0.001)[1]-integrator(log,0.5,5,0.001)[1])
 print("Semi-circle of radius 1 number of reduced calls =", integrate_step(semi_circle,-1,1,0.001)[1]-integrator(semi_circle,-1,1,0.001)[1])
