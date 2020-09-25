@@ -28,10 +28,6 @@ write these arguments into the function to store each time and update the values
 next recursion.
 """
 
-"""
-asdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgdasdgasdgasdgasgd
-"""
-
 def integrator(f,x1,x2,tol,y0=0,y2=0,y4=0,n=0):
     x = np.linspace(x1,x2,5)
     if n == 0: #If has been evaluated 0 times, then it evaluates f(x) at 5 points
