@@ -21,8 +21,7 @@ def integrate_step(fun,x1,x2,tol):
 def integrator(f,x1,x2,tol,y0=0,y2=0,y4=0,n=0):
     x = np.linspace(x1,x2,5)
     if n == 0: #If has been evaluated 0 times, then it evaluates f(x) at 5 points
-        y = f(x)
-        y0,y1,y2,y3,y4 = y[0],y[1],y[2],y[3],y[4] #Defining all the variables so that the function values are stored each iteration
+        y0,y1,y2,y3,y4 = f(x) #Defining all the variables so that the function values are stored each iteration
         n = len(x)
     else: #If has been evaluated >0 times, then it just calculates the two new values that it needs to
         y1 = f(x[1]) #Re-calculating the two points on either side of ym that need to be calculated
