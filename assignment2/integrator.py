@@ -16,7 +16,16 @@ def integrate_step(fun,x1,x2,tol):
         a2,n2=integrate_step(fun,xm,x2,tol/2)
         return a1+a2,n1+n2+n
 
-"""New Integrator: Using new version of simpsons method (Adaptive simpsons integrator: https://rosettacode.org/wiki/Numerical_integration/Adaptive_Simpson%27s_method#Python). If we study the previous integrator, we realise that each time the function is recursively called, the line y=fun(x) is repeated. This is the line we only want to run once. We don't need to evaluate our function for 5 points each time it is called since we already know what the middle term is, and we also know what the function is at the bounds. We would just need to calculate the two intermediate points, i.e. point 1 and 3. Hence, we are not calling f(x) for the same x each time which would be 5 calculations, instead we are doing 2 calculations. To do this, we need a new variable n that stores the number of times the integrator has been called, so that if its been called already it does not calculate y=fun(x) again. Furthermore, we need to make sure that the function stores the values of y[0],y[2] and y[4], especially when the first integrator returns, otherwise the second integrator will be run with the incorrect y-array. We can write these arguments into the function to store each time and update the values, therefore not changing the value stored, only the value used for the next recursion.
+"""New Integrator: Using new version of simpsons method (Adaptive simpsons integrator:
+https://rosettacode.org/wiki/Numerical_integration/Adaptive_Simpson%27s_method#Python). If we study the previous integrator, we realise that each time
+the function is recursively called, the line y=fun(x) is repeated. This is the line we only want to run once. We don't need to evaluate our function
+for 5 points each time it is called since we already know what the middle term is, and we also know what the function is at the bounds. We would just
+need to calculate the two intermediate points, i.e. point 1 and 3. Hence, we are not calling f(x) for the same x each time which would be 5
+calculations, instead we are doing 2 calculations. To do this, we need a new variable n that stores the number of times the integrator has been
+called, so that if its been called already it does not calculate y=fun(x) again. Furthermore, we need to make sure that the function stores the values
+of y[0],y[2] and y[4], especially when the first integrator returns, otherwise the second integrator will be run with the incorrect y-array. We can
+write these arguments into the function to store each time and update the values, therefore not changing the value stored, only the value used for the
+next recursion.
 """
 def integrator(f,x1,x2,tol,y0=0,y2=0,y4=0,n=0):
     x = np.linspace(x1,x2,5)

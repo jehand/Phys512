@@ -7,7 +7,8 @@ x = np.linspace(0.5,1,1000)
 y = np.log2(x)
 
 """
-Now we need to figure out how many terms we need for the truncated fit. We do this by first arbitrarily picking a Chebyshev polynomial of order 20, and then using a while loop to see when the max error no longer exceeds 10^-6 (using our cheby function from chebyshev.py).
+Now we need to figure out how many terms we need for the truncated fit. We do this by first arbitrarily picking a Chebyshev polynomial of order 20,
+and then using a while loop to see when the max error no longer exceeds 10^-6 (using our cheby function from chebyshev.py).
 """
 
 ncheby = 20 #Arbitrarily chosen

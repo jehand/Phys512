@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 from scipy import integrate
 
 """
-To solve for the decay products of U238, we copy the code used in class for the implicit case. The only adjustment that will need to be made is to include more half lives in the evaluation. Each decap step (besides the first and last) will have to include the previous product decaying into it, and the current product decaying into something else. i.e. we should write a for loop to evaluate dydt at each of these times (where x in the in class code is time now, so more like dydt). 
+To solve for the decay products of U238, we copy the code used in class for the implicit case. The only adjustment that will need to be made is to
+include more half lives in the evaluation. Each decap step (besides the first and last) will have to include the previous product decaying into it,
+and the current product decaying into something else. i.e. we should write a for loop to evaluate dydt at each of these times (where x in the in class
+code is time now, so more like dydt). 
 """
 half_lives = [4.468e9, 24.10/365.25, 6.70/(24*365.25), 245500, 75380, 1600, 3.8235/365.25, 3.10/(60*24*365.25), 26.8/(60*24*365.25), 19.9/(60*24*365.25),164.3/((1e-6)*3600*24*365.25), 22.3, 5.015, 138.376/(365.25)] #Written in years
 
