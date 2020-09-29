@@ -10,7 +10,8 @@ fit parameters for our code. This script can be found in "newton.py". Our noise 
 parameters are the parameters we used in problem2. 
 """
 pars = [65,0.02,0.1,0.05,2e-9,0.96]
-dx = 0.001*pars #as the values of pars vary drastically, our dx value cannot be the same for all, hence arbitrarily is 0.1% of each parameter.
+dx = [i*0.01 for i in pars] #as the values of pars vary drastically, our dx value cannot be the same for all. Hence, choose dx=0.1% of param.
 N = np.diag(err**2)
 
-
+test = newton(pow,l,pars,get_spectrum(pars,l),dx,N)
+print(test)

@@ -13,27 +13,34 @@ number of calculations! Besides this, we carry out the normal Newton's method as
 def newton(d,l,pars,pred,delx,N,tau=True): #tau=True when we already know the value of tau
     r = d-pred #residual array
     N = np.linalg.pinv(N) #calculating inverse N
-    #We next look to calculate all the derivatives
-    dA = [] #np.zeros(shape=(len(d),len(pars)))
-    for i in range(len(pars)): #Calculating the derivatives for each parameter
-        fxplus = get_spectrum(pars[i]+delx[i],l)
-        fxminus = get_spectrum(pars[i]-delx[i],l)
-        dA[:,i] = (fxplus-fxminus)/(2*delx[i])
+    delx[3] = 0 if tau else delx[3] #Since we are setting this to 0, we cannot divide for our derivative. 
 
-    #We now have our derivatives, however if we are not concerned with tau, we do not need that column of the matrix.
-    #dA = np.delete(dA,3,axis=1) if tau else dA
-    #Proceeding with Newton's since we now have everything
+    #We next look to calculate all the derivatives
+    dA = np.empty(shape=(len(d),len(pars)))
+    for i in range(len(pars)): #Calculating the derivatives for each parameter
+        if i!=3: #To avoid the divide by 0
+            print("Parameter "+str(i+1))
+            pars1, pars2 = pars,pars; pars1[i] += delx[i]; pars2[i] += delx[i]
+            fxplus = get_spectrum(pars1,l)
+            fxminus = get_spectrum(pars2,l)
+            dA[:,i] = (fxplus-fxminus)/(2*delx[i])
+
+    if tau:
+        dA = np.delete(dA, 3, axis=1)
+    #We now have our derivatives, however if we are not concerned with tau, we do not need that column of the matrix. Proceeding with Newton's
     dm = np.linalg.pinv(dA.transpose() @N @dA) @ (dA.transpose() @N @r)
 
     #If we already have the value for tau
-    dm = np.insert(dm,3,0,axis=0) if tau else dm
+    if tau:
+        dm = np.insert(dm,3,0,axis=0)
+    print(dm)
     return pars+dm
 
 """
-We now write our function that will cycle through values to give us the minimum value of 
-"""
+We now write our function that will cycle through values until chi2 is changing by less than chimin, depending on the accuracy we desire. 
+
 def newton_chi(d,l,pars,pred,delx,N,tau=True,chimin):
     while delchi2>chimin:
         newton = newton(d,l,pars,pred,delx,N,tau=True)
 
-    return chi2, 
+    return chi2, """
