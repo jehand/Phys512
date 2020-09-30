@@ -44,6 +44,7 @@ include our code to calculate the errors in our parameters here so that it is al
 
 def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
     delchi = 10
+    covbef = 0 #Defining so that previous covariance can be outputted if delchi<0
     n = 1
     while delchi>chimin and n<10: #Condition that gives us the accuracy that we desire, yet also does not allow the loop to continue forever
         print("Chi " + str(n) + ":")
@@ -56,9 +57,10 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
         delchi = chibef-chiaft #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.
         print("\t\t" + "chi" + str(n) + "=", chiaft, "\n")
         if delchi<0: #Returning previous pars if negative
-            return pars, np.sqrt(np.diag(cov)), chibef, delchi, powbef
+            return pars, np.sqrt(np.diag(covbef)), chibef, delchi, powbef
         pars = list(newtonpars)
         n += 1 #Just so that we do not loop forever
+        covbef = cov.copy() #taking the previous covariance so that it can be outputted if delchi<0
     return pars, np.sqrt(np.diag(cov)), chiaft, delchi, powaft
 
     """
