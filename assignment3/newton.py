@@ -41,17 +41,24 @@ We now write our function that will cycle through values until chi2 is changing 
 include our code to calculate the errors in our parameters here so that it is all calculated at the same time.
 """
 
-def newton_chi(d,l,err,pars,pred,delx,N,chimin,tau=True):
+def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
     delchi = 10
-    n=1
-    while delchi>chimin and n<4: #Condition that gives us the accuracy that we desire, yet also does not allow the loop to continue forever
+    n = 1
+    while delchi>chimin and n<10: #Condition that gives us the accuracy that we desire, yet also does not allow the loop to continue forever
         print("Chi " + str(n))
+        delx = [i*dx for i in pars] #Calculating the new delx for each iteration
         powbef = get_spectrum(pars,l)
         chibef = np.sum((d-powbef)**2/err**2) #Calculating chi2 before change in pars
-        newtonpars = newton(d,l,pars,pred,delx,N,tau=True) #Calling our previous function to calculate new pars
+        newtonpars = newton(d,l,pars,powbef,delx,N,tau=True) #Calling our previous function to calculate new pars
         powaft = get_spectrum(newtonpars,l)
         chiaft = np.sum((d-powaft)**2/err**2) #Calulating chi2 after change in pars
         delchi = np.abs(chibef-chiaft) #chibef-chiaft should always be positive. However, absolute to make sure.
-        pars = list(newtonpars)
-        n+=1
+        pars = newtonpars
+        n += 1 #Just so that we do not loop forever
+        print("Chiaft " + str(n), chiaft)
     return pars, chiaft, delchi, powaft
+
+    """
+    This is not the most efficient method as it repeats calculations for powbef and chibef multiple times when it has already been calculated as
+    chiaft and powaft in the previous iteration. However, it gets the job done.
+    """
