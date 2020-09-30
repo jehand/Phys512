@@ -15,5 +15,5 @@ dx = 0.001 #as the values of pars vary drastically, our dx value cannot be the s
 N = np.diag(err**2)
 
 model = get_spectrum(parsi,l)
-new_params = newton_chi(pow,l,err,parsi,model,dx,N,0.01)
-print(new_params)
+result = newton_chi(pow,l,err,parsi,model,dx,N,0.001) #lets arbitrarily set the difference between our chi2 values to be less than 0.001
+print("Parameters =", result[0], "\n"+"Errors =", result[1], "Chi =", result[2])

@@ -19,7 +19,7 @@ def newton(d,l,pars,pred,delx,N,tau=True): #tau=True when we already know the va
     for i in range(len(pars)): #Calculating the derivatives for each parameter
         if i==3 and tau: #To avoid the divide by 0
             continue
-        print("Parameter " + str(i+1))
+        print("\t\t"+"Parameter " + str(i+1))
         pars1, pars2 = list(pars), list(pars)
         pars1[i] += delx[i]
         pars2[i] -= delx[i]
@@ -29,12 +29,13 @@ def newton(d,l,pars,pred,delx,N,tau=True): #tau=True when we already know the va
     if tau:
         dA = np.delete(dA, 3, axis=1)
     #We now have our derivatives, however if we are not concerned with tau, we do not need that column of the matrix. Proceeding with Newton's
-    dm = np.linalg.inv(dA.transpose() @N @dA) @ (dA.transpose() @N @r)
+    cov = np.linalg.inv(dA.transpose() @N @dA) #to calculate the errors
+    dm = cov @ (dA.transpose() @N @r)
 
     #If we already have the value for tau
     if tau:
         dm = np.insert(dm,3,0,axis=0)
-    return pars+dm
+    return pars+dm, cov
 
 """
 We now write our function that will cycle through values until chi2 is changing by less than chimin, depending on the accuracy we desire. We will also
@@ -45,18 +46,20 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
     delchi = 10
     n = 1
     while delchi>chimin and n<10: #Condition that gives us the accuracy that we desire, yet also does not allow the loop to continue forever
-        print("Chi " + str(n))
+        print("Chi " + str(n) + ":")
         delx = [i*dx for i in pars] #Calculating the new delx for each iteration
         powbef = get_spectrum(pars,l)
         chibef = np.sum((d-powbef)**2/err**2) #Calculating chi2 before change in pars
-        newtonpars = newton(d,l,pars,powbef,delx,N,tau=True) #Calling our previous function to calculate new pars
+        newtonpars, cov = newton(d,l,pars,powbef,delx,N,tau) #Calling our previous function to calculate new pars
         powaft = get_spectrum(newtonpars,l)
         chiaft = np.sum((d-powaft)**2/err**2) #Calulating chi2 after change in pars
-        delchi = np.abs(chibef-chiaft) #chibef-chiaft should always be positive. However, absolute to make sure.
-        pars = newtonpars
+        delchi = (chibef-chiaft) #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.
+        print("\t\t" + "chi" + str(n) + "=", chiaft, "\n")
+        if delchi<0:
+            return pars, np.sqrt(np.diag(cov)), chibef, delchi, powbef
+        pars = list(newtonpars)
         n += 1 #Just so that we do not loop forever
-        print("Chiaft " + str(n), chiaft)
-    return pars, chiaft, delchi, powaft
+    return pars, np.sqrt(np.diag(cov)), chiaft, delchi, powaft
 
     """
     This is not the most efficient method as it repeats calculations for powbef and chibef multiple times when it has already been calculated as
