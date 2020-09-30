@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from wmap_camb_example import get_spectrum
 from newton import newton
 from newton import newton_chi
@@ -15,5 +16,15 @@ dx = 0.001 #as the values of pars vary drastically, our dx value cannot be the s
 N = np.diag(err**2)
 
 model = get_spectrum(parsi,l)
-result = newton_chi(pow,l,err,parsi,model,dx,N,0.001) #lets arbitrarily set the difference between our chi2 values to be less than 0.001
-print("Parameters =", result[0], "\n"+"Errors =", result[1], "Chi =", result[2])
+result = newton_chi(pow,l,err,parsi,model,dx,N,0.001, False) #lets arbitrarily set the difference between our chi2 values to be less than 0.001
+print("Parameters =", result[0], "\n"+"Errors =", result[1], "\n"+"Chi =", result[2])
+
+plt.xlabel(r"$l$", fontsize=14)
+#plt.ylabel("Power Spectrum", fontsize=14)
+plt.ylabel("Residuals", fontsize=14)
+plt.errorbar(l, pow-result[-1], yerr=err, fmt="kx", ms=4, elinewidth=0.5, capsize=1, alpha=0.2, label="Residuals")
+#plt.errorbar(l, pow, yerr=err, fmt="kx", ms=4, elinewidth=0.5, capsize=1, alpha=0.2, label="Data")
+#plt.plot(l, result[-1], "r-", label="Newton's Fit")
+plt.legend()
+#plt.savefig("problem_3_tauconstres.png", bbox_inches="tight", dpi=500)
+plt.show()

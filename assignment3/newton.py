@@ -53,9 +53,9 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
         newtonpars, cov = newton(d,l,pars,powbef,delx,N,tau) #Calling our previous function to calculate new pars
         powaft = get_spectrum(newtonpars,l)
         chiaft = np.sum((d-powaft)**2/err**2) #Calulating chi2 after change in pars
-        delchi = (chibef-chiaft) #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.
+        delchi = chibef-chiaft #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.
         print("\t\t" + "chi" + str(n) + "=", chiaft, "\n")
-        if delchi<0:
+        if delchi<0: #Returning previous pars if negative
             return pars, np.sqrt(np.diag(cov)), chibef, delchi, powbef
         pars = list(newtonpars)
         n += 1 #Just so that we do not loop forever
