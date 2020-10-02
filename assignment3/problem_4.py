@@ -16,13 +16,12 @@ parsi = [65,0.02,0.1,0.05,2e-9,0.96]
 dx = 0.001 #as the values of pars vary drastically, our dx value cannot be the same for all. Hence, choose dx=0.1% of param.
 N = np.diag(err**2)
 
-model = get_spectrum(parsi,l)
-newton = newton_chi(pow,l,err,parsi,model,dx,N,0.001,False) #lets arbitrarily set the difference between our chi2 values to be less than 0.001
+newton = np.load("newton.npy", allow_pickle=True) #Let us load our Newton data from problem 3 for floating tau
 print("Parameters =", newton[0], "\n"+"Errors =", np.sqrt(np.diag(newton[1])), "\n"+"Chi =", newton[2])
 
 """
 We now run our markov chain from 'markov.py' using the covariance given by Newtons method.
 """
 
-markov = mcmc(pow, l, newton[-1], err, newton[0], newton[1], newton[2])
+markov = mcmc(pow,l,newton[-1],err,newton[0],newton[1],newton[2],5000)
 print(markov)
