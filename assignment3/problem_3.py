@@ -17,7 +17,7 @@ N = np.diag(err**2)
 
 model = get_spectrum(parsi,l)
 result = newton_chi(pow,l,err,parsi,model,dx,N,0.001) #lets arbitrarily set the difference between our chi2 values to be less than 0.001
-print("Parameters =", result[0], "\n"+"Errors =", result[1], "\n"+"Chi =", result[2])
+print("Parameters =", result[0], "\n"+"Errors =", np.sqrt(np.diag(result[1])), "\n"+"Chi =", result[2])
 
 plt.xlabel(r"$l$", fontsize=14)
 plt.ylabel("Power Spectrum", fontsize=14)

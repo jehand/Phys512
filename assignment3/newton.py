@@ -57,11 +57,11 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
         delchi = chibef-chiaft #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.
         print("\t\t" + "chi" + str(n) + "=", chiaft, "\n")
         if delchi<0: #Returning previous pars if negative
-            return pars, np.sqrt(np.diag(covbef)), chibef, delchi, powbef
+            return pars, covbef, chibef, delchi, powbef
         pars = list(newtonpars)
         n += 1 #Just so that we do not loop forever
         covbef = cov.copy() #taking the previous covariance so that it can be outputted if delchi<0
-    return pars, np.sqrt(np.diag(cov)), chiaft, delchi, powaft
+    return pars, cov, chiaft, delchi, powaft
 
     """
     This is not the most efficient method as it repeats calculations for powbef and chibef multiple times when it has already been calculated as
