@@ -11,12 +11,12 @@ def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000):
     print("Starting Markov")
     npar = len(pars)
     n_success = 0
-    r = np.linalg.cholesky(cov*0.08) #Calculating cholesky matrix
+    r = np.linalg.cholesky(cov) #Calculating cholesky matrix
     chain = np.zeros([nstep,npar])
     chivec = np.zeros(nstep)
     for i in range(nstep):
         print("\t" + "Step #" + str(i+1))
-        par_step = np.dot(r,np.random.randn(r.shape[0])) #Our step size is too large -> arbitrarily adjust by a factor of 0.4 (=35% success rate)
+        par_step = np.dot(r,np.random.randn(r.shape[0]))*0.5 #Our step size is too large -> arbitrarily adjust by a factor of 0.4 (=35% success rate)
         pars_trial = pars+par_step
         new_model = get_spectrum(pars_trial,l)
         chi_trial = np.sum((d-new_model)**2/(err**2))

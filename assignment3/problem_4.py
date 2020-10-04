@@ -17,16 +17,24 @@ dx = 0.001 #as the values of pars vary drastically, our dx value cannot be the s
 N = np.diag(err**2)
 
 newton = np.load("newton.npy", allow_pickle=True) #Let us load our Newton data from problem 3 for floating tau
-print("Parameters =", newton[0], "\n"+"Errors =", np.sqrt(np.diag(newton[1])), "\n"+"Chi =", newton[2])
+#print("Parameters =", newton[0], "\n"+"Errors =", np.sqrt(np.diag(newton[1])), "\n"+"Chi =", newton[2])
 
 """
 We now run our markov chain from 'markov.py' using the covariance given by Newtons method.
 """
 
-n = 5000 #19.5%
+n = 100 
+
 #markov = mcmc(pow,l,err,newton[0],newton[1],newton[2],n)
-markov = mcmc(pow,l,err,parsi,newton[1],1588.42568,n)
-np.save("markov", markov)
+#markov = mcmc(pow,l,err,parsi,newton[1],1588.42568,n)
+
+chain0 = np.load("markov.npy", allow_pickle=True)
+chain0[0] = chain0[0][400:,];chain0[1] = chain0[1][400:,]
+parsc = np.mean(chain0[0], axis=0)
+cov = np.cov(chain0[0].transpose())
+markov = mcmc(pow,l,err,parsc,cov,chain0[1].mean(),n)
+
+#np.save("markov1", markov)
 print(markov)
 plt.plot(np.linspace(1,n,n),markov[0][:,0])
 plt.show()
