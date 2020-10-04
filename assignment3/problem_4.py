@@ -23,18 +23,30 @@ newton = np.load("newton.npy", allow_pickle=True) #Let us load our Newton data f
 We now run our markov chain from 'markov.py' using the covariance given by Newtons method.
 """
 
-n = 100 
+n = 5000 
 
 #markov = mcmc(pow,l,err,newton[0],newton[1],newton[2],n)
 #markov = mcmc(pow,l,err,parsi,newton[1],1588.42568,n)
-
+"""
 chain0 = np.load("markov.npy", allow_pickle=True)
 chain0[0] = chain0[0][400:,];chain0[1] = chain0[1][400:,]
 parsc = np.mean(chain0[0], axis=0)
 cov = np.cov(chain0[0].transpose())
-markov = mcmc(pow,l,err,parsc,cov,chain0[1].mean(),n)
+markov = mcmc(pow,l,err,parsc,cov,chain0[1].mean(),n)"""
 
-#np.save("markov1", markov)
-print(markov)
-plt.plot(np.linspace(1,n,n),markov[0][:,0])
+chain1 = np.load("markov1.npy", allow_pickle=True)
+chain1[0] = chain1[0][4000:,];chain1[1] = chain1[1][4000:,]
+parsc1 = np.mean(chain1[0], axis=0)
+cov1 = np.cov(chain1[0].transpose())
+markov1 = mcmc(pow,l,err,parsc1,cov1,chain1[1].mean(),n)
+
+np.save("markov2", markov1)
+print(markov1)
+plt.plot(np.linspace(1,n,n),markov1[0][:,0],label="H0")
+plt.plot(np.linspace(1,n,n),markov1[0][:,1],label="wh")
+plt.plot(np.linspace(1,n,n),markov1[0][:,2],label="wc")
+plt.plot(np.linspace(1,n,n),markov1[0][:,3],label="tau")
+plt.plot(np.linspace(1,n,n),markov1[0][:,4],label="As")
+plt.plot(np.linspace(1,n,n),markov1[0][:,5],label="slope")
+plt.legend()
 plt.show()
