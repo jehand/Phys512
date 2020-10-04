@@ -40,7 +40,7 @@ parsc1 = np.mean(chain1[0], axis=0)
 cov1 = np.cov(chain1[0].transpose())
 markov1 = mcmc(pow,l,err,parsc1,cov1,chain1[1].mean(),n)
 
-np.save("markov2", markov1)
+np.save("markov3", markov1)
 print(markov1)
 plt.plot(np.linspace(1,n,n),markov1[0][:,0],label="H0")
 plt.plot(np.linspace(1,n,n),markov1[0][:,1],label="wh")

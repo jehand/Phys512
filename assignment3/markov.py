@@ -16,7 +16,7 @@ def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000):
     chivec = np.zeros(nstep)
     for i in range(nstep):
         print("\t" + "Step #" + str(i+1))
-        par_step = np.dot(r,np.random.randn(r.shape[0]))*0.8 #Our step size is too large -> arbitrarily adjust by a factor of 0.4 (=35% success rate)
+        par_step = np.dot(r,np.random.randn(r.shape[0]))*0.7 #Our step size is too large -> arbitrarily adjust by a factor of 0.4 (=35% success rate)
         pars_trial = pars+par_step
         new_model = get_spectrum(pars_trial,l)
         chi_trial = np.sum((d-new_model)**2/(err**2))
