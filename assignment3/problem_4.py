@@ -23,8 +23,10 @@ print("Parameters =", newton[0], "\n"+"Errors =", np.sqrt(np.diag(newton[1])), "
 We now run our markov chain from 'markov.py' using the covariance given by Newtons method.
 """
 
-n=12000
-markov = mcmc(pow,l,newton[-1],err,newton[0],newton[1],newton[2],n)
+n = 5000 #19.5%
+#markov = mcmc(pow,l,err,newton[0],newton[1],newton[2],n)
+markov = mcmc(pow,l,err,parsi,newton[1],1588.42568,n)
+np.save("markov", markov)
 print(markov)
-plt.plot(np.linspace(1,n,n),markov[1])
+plt.plot(np.linspace(1,n,n),markov[0][:,0])
 plt.show()

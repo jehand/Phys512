@@ -7,11 +7,11 @@ We can take the 'mcmc_class_wnewton.py' from lectures and adapt it for our needs
 in the program we currently are.
 """
 
-def mcmc(d,l,pred,err,pars,cov,chi_cur,nstep=5000):
+def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000):
     print("Starting Markov")
-    npar=len(pars)
+    npar = len(pars)
     n_success = 0
-    r = np.linalg.cholesky(cov*0.1) #Calculating cholesky matrix
+    r = np.linalg.cholesky(cov*0.08) #Calculating cholesky matrix
     chain = np.zeros([nstep,npar])
     chivec = np.zeros(nstep)
     for i in range(nstep):
@@ -25,10 +25,10 @@ def mcmc(d,l,pred,err,pars,cov,chi_cur,nstep=5000):
         if (np.random.rand(1)<accept_prob) & (pars_trial[3]>=0): #accept the step with appropriate probability + don't accept if tau<0. 
             pars = pars_trial
             chi_cur = chi_trial
-            n_success+=1
+            n_success += 1
             print("\t\t"+"Success! Pars=", pars, "Chi=", chi_cur)
         else:
             print("\t\t"+"Fail :(")
         chain[i,:] = pars
         chivec[i] = chi_cur
-    return chain, chivec, (n_success/nstep)*100, n_success
+    return chain, chivec, (n_success/nstep)*100
