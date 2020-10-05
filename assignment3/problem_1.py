@@ -15,10 +15,7 @@ We now carry out our fit. First, we define our predicted parabaloid function tha
 def para(x,y,x0,y0,c0,a1,a2):
     return a1*x**2+a2*y**2+x0*x+y0*y+c0 #returning z-values
 
-def para1(u,v,a,z0):
-    return a*(u**2+v**2)+z0
-
-def linear(d):
+def linear(d): #We assume no noise as of now.
     A = np.empty(shape=(len(d),5)) #A = [1,x^2,x,y^2,y]
     A[:,0], A[:,1], A[:,2],A[:,3], A[:,4] = 1.0, d[:,0]**2, d[:,0], d[:,1]**2, d[:,1]
     cov = np.linalg.inv(A.transpose() @ A)
@@ -27,23 +24,23 @@ def linear(d):
 
 x,y,z = data[:,0], data[:,1], data[:,2]
 c0,a1,x0,a2,y0 = linear(data)[0] #Getting our parameters
-cov = linear(data)[1]
-errs = np.sqrt(np.diag(cov))
+cov = linear(data)[1] #Getting our covariance matrix
+errs = np.sqrt(np.diag(cov)) #Calculating errs as square root of diagonals
 a = (a1+a2)/2 #Calculating a as the average of both a values
-aerr = (errs[1]+errs[3])/2 #Calculating error in a as the average of both uncerts for a1 and a2
-print("c0=",c0,"a1=",a1,"x0=",x0,"a2=",a2,"y0=",y0,"a_mean=",a)
-print("errs=",errs,"a_mean err=",aerr)
+print("c0=",c0,"a1=",a1,"x0=",x0,"a2=",a2,"y0=",y0)
+print("errs=",errs)
 
-"""#Plotting the original data in 3D
+#Plotting the original data in 3D
 fig = plt.figure()
 ax = plt.axes(projection="3d")
 ax.scatter3D(x,y,z,c=-z,s=15,cmap=cmap,label="Data")
+
 """
+Now we create our surface using the our linear interpolation for z. We plot in cylindrical coordinates so that the meshgrid looks better, 
+radius=(max_x-min_x)/2 ~ (max_y-min_y)/2. For accuracy we take the average of both and use this (as is not perfect circle).
 """
-Now we create our surface using the our linear interpolation for z. We plot with cylindrical coordinates so that the meshgrid looks better, 
-radius=(max_x-min_x)/2 ~ (max_y-min_y)/2. For accuracy we take the average of both and use this.
-"""
-"""rmax = ((x.max()-x.min())+(y.max()-y.min()))/4
+
+rmax = ((x.max()-x.min())+(y.max()-y.min()))/4
 r = np.linspace(0,rmax,1000)
 thetha = np.linspace(0,2*np.pi,1000)
 r, thetha = np.meshgrid(r,thetha)
@@ -59,21 +56,25 @@ ax.tick_params(axis='both', which='major', labelsize=8)
 ax.view_init(24,-45)
 ax.legend(fontsize=8)
 plt.savefig("problem_1_3D.png", dpi=500)
-plt.show()"""
+plt.show()
 
 #Estimating the noise in the data
 res = z-para(x,y,x0,y0,c0,a1,a2)
-N = np.std(res,ddof=1) #This is the noise in our data
+N = np.std(res,ddof=1) #standard deviation of residuals is the noise
 print("Noise=",N)
+
+newcov = cov/N #new covariance is just the old one divided by N since N is a constant
+a1u,a2u = np.sqrt(np.diag(newcov))[1], np.sqrt(np.diag(newcov))[3]
+au = np.sqrt(a1u**2+a2u**2)/2 #Calculating uncerts in the usual way
+print("a=",a,"±",au)
 focal = 1/(4*a)
-ufocal = aerr/(4*a**2)
+ufocal = au/(4*a**2)
 print("Focal=",focal,"±",ufocal)
 
-"""
 #Plotting residuals for the fit
 plt.clf()
 plt.plot(x,res,"kx")
 plt.ylabel("Residual",fontsize=12)
 plt.xlabel("x", fontsize=12)
 plt.savefig("problem_1_residual.png",bbox_inches="tight",dpi=500)
-plt.show()"""
+plt.show()
