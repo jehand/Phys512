@@ -39,7 +39,9 @@ def newton(d,l,pars,pred,delx,N,tau=True): #tau=True when we already know the va
 
 """
 We now write our function that will cycle through values until chi2 is changing by less than chimin, depending on the accuracy we desire. We will also
-include our code to calculate the errors in our parameters here so that it is all calculated at the same time.
+include our code to calculate the errors in our parameters here so that it is all calculated at the same time. The method used  is not the most
+efficient method as it repeats calculations for powbef and chibef multiple times when it has already been calculated as chiaft and powaft in the
+previous iteration. However, it gets the job done.
 """
 
 def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
@@ -62,8 +64,3 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
         n += 1 #Just so that we do not loop forever
         covbef = cov.copy() #taking the previous covariance so that it can be outputted if delchi<0
     return pars, cov, chiaft, delchi, powaft
-
-    """
-    This is not the most efficient method as it repeats calculations for powbef and chibef multiple times when it has already been calculated as
-    chiaft and powaft in the previous iteration. However, it gets the job done.
-    """

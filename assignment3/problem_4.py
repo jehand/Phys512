@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from wmap_camb_example import get_spectrum
-from newton import newton
-from newton import newton_chi
 from markov import mcmc
 from scipy import signal
 

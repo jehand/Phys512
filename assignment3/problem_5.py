@@ -1,11 +1,12 @@
 import numpy as np
-
-x,y,z = np.loadtxt("dish_zenith.txt", usecols=0), np.loadtxt("dish_zenith.txt", usecols=1), np.loadtxt("dish_zenith.txt", usecols=2) #Importing data
+import matplotlib.pyplot as plt
+from wmap_camb_example import get_spectrum
+from markov import mcmc
 
 """
-We now carry out our fit. First, we define our predicted function with our new parameters. 
+We begin by recognising that we are adding a new value of tau as a prior in our matrix. Hence, we must adapt our 'markov.py' file (which we already
+have). 
 """
 
-def para(x,y,x0,y0,z0,a,r):
-    return a(x**2+y**2-x0*x-y0*x+r)+z0 #returning z-values
-
+tau = 0.0544
+utau = 0.0073
