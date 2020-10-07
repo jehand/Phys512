@@ -44,7 +44,7 @@ chain2 = np.load("markov2.npy",allow_pickle=True)
 
 burnindex = 100 #the determined burn in index for each chain, chain1=500, chain2=4000, chain3=100.
 n = len(chain[1][burnindex:])
-plt.plot(np.linspace(1,n,n),chain[1][burnindex:],label="H0",color="mediumblue")
+plt.plot(np.linspace(1,n,n),chain[1][burnindex:],color="mediumblue")
 plt.xlabel("Step #", fontsize=14)
 plt.ylabel(r"$\chi^2$", fontsize=14)
 #plt.savefig("problem_4_chain3.png", bbox_inches="tight", dpi=500)
