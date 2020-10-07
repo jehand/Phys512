@@ -28,13 +28,14 @@ chain0[0] = chain0[0][500:,];chain0[1] = chain0[1][500:,]
 parsc = np.mean(chain0[0], axis=0)
 cov = np.cov(chain0[0].transpose())
 markov = mcmc(pow,l,err,parsc,cov,chain0[1].mean(),n)
+np.save("markov1", markov)
 
 chain1 = np.load("markov1.npy", allow_pickle=True)
 chain1[0] = chain1[0][4000:,];chain1[1] = chain1[1][4000:,]
 parsc1 = np.mean(chain1[0], axis=0)
 cov1 = np.cov(chain1[0].transpose())
 markov1 = mcmc(pow,l,err,parsc1,cov1,chain1[1].mean(),n)
-np.save("markov3", markov1)
+np.save("markov2", markov1)
 print(markov1)"""
 
 #We load in our previously saved results
@@ -44,14 +45,14 @@ chain2 = np.load("markov2.npy",allow_pickle=True)
 
 burnindex = 100 #the determined burn in index for each chain, chain1=500, chain2=4000, chain3=100.
 n = len(chain[1][burnindex:])
-plt.plot(np.linspace(1,n,n),chain[1][burnindex:],color="mediumblue")
+plt.plot(np.linspace(1,n,n),chain2[1][burnindex:],color="mediumblue")
 plt.xlabel("Step #", fontsize=14)
 plt.ylabel(r"$\chi^2$", fontsize=14)
 #plt.savefig("problem_4_chain3.png", bbox_inches="tight", dpi=500)
 plt.show()
 
 #We can now calculate the Fourier transform for each of our chains to see if we have reached convergence and determine independent samples
-chainfour = signal.periodogram(chain[1][burnindex:],scaling="spectrum",fs=2) #fs=2 to scale the fourier transform so that its max=1
+chainfour = signal.periodogram(chain2[1][burnindex:],scaling="spectrum",fs=2) #fs=2 to scale the fourier transform so that its max=1
 plt.plot(chainfour[0],chainfour[1],color="crimson")
 plt.ylim(1e-8,10) #Arbitrarily set to allow for better viewing
 plt.xscale("log")
@@ -73,3 +74,7 @@ chain2errs = np.std(chain2[0][100:,],ddof=1,axis=0)/np.sqrt(chain2samples)
 pars = (chain1pars+chain2pars)/2 #Calculating pars by taking an average
 parserrs = np.sqrt(chain1errs**2+chain2errs**2)/2 #Calculating error in pars by taking the average
 print("pars=",pars,"\nerrs=",parserrs)
+
+#Final chi^2 using these new pars
+chi2final = np.sum((pow-get_spectrum(pars,l))**2/err**2)
+print("Final chi^2=",chi2final)

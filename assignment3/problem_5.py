@@ -38,7 +38,7 @@ print("Acceptance Rate=",markov[-1])
 plt.plot(np.linspace(1,n,n),markov[1][burnindex:],color="mediumblue")
 plt.xlabel("Step #", fontsize=14)
 plt.ylabel(r"$\chi^2$", fontsize=14)
-plt.savefig("problem_5_plot.png", bbox_inches="tight", dpi=500)
+#plt.savefig("problem_5_plot.png", bbox_inches="tight", dpi=500)
 plt.show()
 
 #We can also calculate the Fourier transform to see if we have reached convergence and determine independent samples
@@ -49,5 +49,16 @@ plt.xscale("log")
 plt.yscale("log")
 plt.xlabel("Sample Frequencies Scaled", fontsize=14)
 plt.ylabel("Power Spectrum", fontsize=14)
-plt.savefig("problem_5_fourier.png", bbox_inches="tight", dpi=500)
+#plt.savefig("problem_5_fourier.png", bbox_inches="tight", dpi=500)
 plt.show()
+
+#Calculating parameter values and errors
+indeptrials = 0.016*n #number of independent trials
+print("Independent Trials=",indeptrials)
+chainpars = np.mean(markov[0][burnindex:,:],axis=0)
+chainerrs = np.std(markov[0][burnindex:,:],ddof=1,axis=0)/np.sqrt(indeptrials)
+print("Pars=",chainpars,"\nErrs=",chainerrs)
+
+#Final chi^2 using these new pars
+chi2final = np.sum((pow-get_spectrum(chainpars,l))**2/err**2)
+print("Final chi^2=",chi2final)
