@@ -4,13 +4,12 @@ from wmap_camb_example import get_spectrum
 
 """
 We can take the 'mcmc_class_wnewton.py' from lectures and adapt it for our needs. Print statements have been added just so that we are aware of where
-in the program we currently are. Furthermore, we add a parameter tau_interv that checks whether tau has been given as a prior or not. If it has, it
-steps tau by the random sampling of a normal distribution centered at 0 with sig=1, multiplyed by our interval (i.e. tau's error). We also have a
-parameter tau that sets the mean value of tau, so each time we are iterating about the mean of tau, and hence our chain does not drag too far away
-from the origin.
+in the program we currently are. Furthermore, we add a parameter tau that checks whether tau has been given as a prior or not, and a parameter tau_std
+which is the uncertainty in tau. If tau has been given as a prior, we chooses a value for tau from the random sampling of a normal distribution
+centered at tau with sig=tau_std (i.e. tau's error).
 """
 
-def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000,tau=0,tau_interv=0):
+def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000,tau=0,tau_std=0):
     print("Starting Markov")
     npar = len(pars)
     n_success = 0 #so we can determine acceptance rate
@@ -21,8 +20,8 @@ def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000,tau=0,tau_interv=0):
         print("\t" + "Step #" + str(i+1))
         par_step = np.dot(r,np.random.randn(r.shape[0]))
         pars_trial = pars.copy()
-        if tau_interv !=0: #If it is not the default, then we know our covariance matrix if pars-1 dimensional so we add another column for tau.
-            par_step = np.insert(par_step,3,tau_interv*np.random.randn()) #tau uncert is a 1sig unertainty, hence we step with a normal distribution.
+        if tau !=0: #If it is not the default, then we know our covariance matrix if pars-1 dimensional so we add another column for tau.
+            par_step = np.insert(par_step,3,tau_std*np.random.randn()) #tau uncert is a 1sig unertainty, hence we step with a normal distribution.
             pars_trial[3] = tau #Always setting tau to be what was determined by Planck and then taking a step from there.
         pars_trial += par_step*0.5 #Our step size is too large -> arbitrarily adjust for each chain
         new_model = get_spectrum(pars_trial,l)

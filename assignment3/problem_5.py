@@ -8,12 +8,13 @@ d = np.loadtxt("wmap_tt_spectrum_9yr_v5.txt", skiprows=20, usecols=(0,1,2)) #Imp
 l, pow, err = d[:,0], d[:,1], d[:,2] #Splitting the data into its appropriate values
 
 """
-We begin by recognising that we are adding a new interval of tau as a prior in our matrix. Hence, we must adapt our 'markov.py' file (which we already
-have). Furthermore, we use the covariance matrix given by newtons method without tau and calculate the cholesky matrix with it to take correlated
-steps. We then add our interval of tau as a prior using a random number fit in 'markov.py'.
+We begin by recognising that we are no longer stepping tau using the results of our Cholesky matrix. Hence, we must adapt our 'markov.py' file (which
+we already have). Begin by using the covariance matrix given by newtons method without tau and calculate the cholesky matrix with it to take
+correlated steps for the other parameters. We then randomly sample our value of tau from a normal distribution centered at the value of tau with a
+standard deviation equal to the uncertainty in tau (taking, by convention, the uncertainty to be the 1 sigma deviation).
 """
 
-"""#Importing newton data
+#Importing newton data
 newton = np.load("newtontauconst.npy", allow_pickle=True)
 
 n = 20000 #number of steps
@@ -27,8 +28,9 @@ chi = np.sum((pow-get_spectrum(newton[0],l))**2/err**2)
 print("Starting Chi^2=", chi)
 
 markov = mcmc(pow,l,err,newton[0],newton[1],chi,n,tau,utau)
-np.save("markovtau",markov)"""
+np.save("markovtau",markov)
 
+#We load in the data so we do not need to run the above code all the time
 markov = np.load("markovtau.npy", allow_pickle=True)
 burnindex = 100
 n = len(markov[0][:,0])-burnindex

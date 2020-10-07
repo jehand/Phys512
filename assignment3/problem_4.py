@@ -7,21 +7,16 @@ from scipy import signal
 d = np.loadtxt("wmap_tt_spectrum_9yr_v5.txt", skiprows=20, usecols=(0,1,2)) #Importing the data
 l, pow, err = d[:,0], d[:,1], d[:,2] #Splitting the data into its appropriate values
 
-"""
-We begin by copying our Newton program over so that we can use the co-variance matrix given by Newton's method.
-"""
-
+#We begin by copying our Newton program over so that we can use the co-variance matrix given by Newton's method.
 parsi = [65,0.02,0.1,0.05,2e-9,0.96]
 dx = 0.001 #as the values of pars vary drastically, our dx value cannot be the same for all. Hence, choose dx=0.1% of param.
 N = np.diag(err**2)
-
 newton = np.load("newton.npy", allow_pickle=True) #Let us load our Newton data from problem 3 for floating tau
 
 #We now run our markov chain from 'markov.py' using the covariance given by Newtons method.
 n = 5000 #number of steps to use
 markov = mcmc(pow,l,err,newton[0],newton[1],newton[2],n)
 
-"""
 #For our next chains we use the covariance matrix of the previous chain in order to determine our step size
 chain0 = np.load("markov.npy", allow_pickle=True)
 chain0[0] = chain0[0][500:,];chain0[1] = chain0[1][500:,]
@@ -36,9 +31,8 @@ parsc1 = np.mean(chain1[0], axis=0)
 cov1 = np.cov(chain1[0].transpose())
 markov1 = mcmc(pow,l,err,parsc1,cov1,chain1[1].mean(),n)
 np.save("markov2", markov1)
-print(markov1)"""
 
-#We load in our previously saved results
+#We load in our previously saved results so that we do not need to run the above code all the time
 chain = np.load("markov.npy",allow_pickle=True)
 chain1 = np.load("markov1.npy",allow_pickle=True)
 chain2 = np.load("markov2.npy",allow_pickle=True)

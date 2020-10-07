@@ -27,15 +27,15 @@ def newton(d,l,pars,pred,delx,N,tau=True): #tau=True when we already know the va
         fxminus = get_spectrum(pars2,l)
         dA[:,i] = (fxplus-fxminus)/(2*delx[i])
     if tau:
-        dA = np.delete(dA, 3, axis=1)
+        dA = np.delete(dA, 3, axis=1) #We are not stepping tau so delete the 3rd column when calculating the covariance and dm
     #We now have our derivatives, however if we are not concerned with tau, we do not need that column of the matrix. Proceeding with Newton's
     cov = np.linalg.inv(dA.transpose() @N @dA) #to calculate the errors
     dm = cov @ (dA.transpose() @N @r)
 
     #If we already have the value for tau
     if tau:
-        dm = np.insert(dm,3,0,axis=0)
-    return pars+dm, cov
+        dm = np.insert(dm,3,0,axis=0) #Now we insert dm=0 so tau is not stepped by anything
+    return pars+dm, cov, dA
 
 """
 We now write our function that will cycle through values until chi2 is changing by less than chimin, depending on the accuracy we desire. We will also
@@ -53,7 +53,7 @@ def newton_chi(d,l,err,pars,pred,dx,N,chimin,tau=True):
         delx = [i*dx for i in pars] #Calculating the new delx for each iteration
         powbef = get_spectrum(pars,l)
         chibef = np.sum((d-powbef)**2/err**2) #Calculating chi2 before change in pars
-        newtonpars, cov = newton(d,l,pars,powbef,delx,N,tau) #Calling our previous function to calculate new pars
+        newtonpars, cov = newton(d,l,pars,powbef,delx,N,tau)[:2] #Calling our previous function to calculate new pars
         powaft = get_spectrum(newtonpars,l)
         chiaft = np.sum((d-powaft)**2/err**2) #Calulating chi2 after change in pars
         delchi = chibef-chiaft #chibef-chiaft should always be positive. However, if it's negative, we should return the previous pars.

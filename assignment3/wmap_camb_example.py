@@ -17,5 +17,5 @@ def get_spectrum(pars,l):
     results=camb.get_results(pars)
     powers=results.get_cmb_power_spectra(pars,CMB_unit='muK')
     cmb=powers['total']
-    tt=cmb[int(min(l)):int(max(l)+1),0]    #Edited so that the function outputs the results between the minimum and maximum l value
+    tt=cmb[int(min(l)):int(max(l)+1),0] #Edited so that the function outputs the results between the minimum and maximum l value
     return tt
