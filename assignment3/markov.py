@@ -20,9 +20,9 @@ def mcmc(d,l,err,pars,cov,chi_cur,nstep=5000,tau=0,tau_std=0):
         print("\t" + "Step #" + str(i+1))
         par_step = np.dot(r,np.random.randn(r.shape[0]))
         pars_trial = pars.copy()
-        if tau !=0: #If it is not the default, then we know our covariance matrix if pars-1 dimensional so we add another column for tau.
+        if tau !=0: #If it is not the default, then we know our covariance matrix is pars-1 dimensional so we insert our tau step.
             par_step = np.insert(par_step,3,tau_std*np.random.randn()) #tau uncert is a 1sig unertainty, hence we step with a normal distribution.
-            pars_trial[3] = tau #Always setting tau to be what was determined by Planck and then taking a step from there.
+            pars_trial[3] = tau #Always setting tau to be what was determined by Planck and then taking a step from there. i.e. tau' ~ N(tau,tau_std).
         pars_trial += par_step*0.5 #Our step size is too large -> arbitrarily adjust for each chain
         new_model = get_spectrum(pars_trial,l)
         chi_trial = np.sum((d-new_model)**2/(err**2))
