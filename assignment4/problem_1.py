@@ -6,15 +6,18 @@ import matplotlib.pyplot as plt
 x = np.linspace(-5,5,100)
 y = (1/np.sqrt(2*np.pi))*np.exp(-x**2/2)
 
-#A shit in a fourier transform can be thought of as a adding a phase to each term (shift theorem)
-def shift(arr,x): #arr is the initial array and x is the x-amount to be shifted by
+#A shit in a fourier transform can be thought of as a adding a phase term (shift theorem)
+def shift(arr,delx): #arr is the initial array and x is the x-amount to be shifted by
     f = fft(arr)
-    n = len(arr)
-    k = np.linspace(0,n-1,n)
-    exp = np.exp(-2*complex(0,1)*np.pi*k*x/n)
+    N = len(arr)
+    k = np.linspace(0,N-1,N)
+    exp = np.exp(-2*complex(0,1)*np.pi*k*delx/N)
     return np.real(ifft(f*exp))
 
-plt.plot(x,y,label="Original Gaussian")
-plt.plot(x,shift(y,len(y)/2),label="Shifted Gaussian")
-plt.legend()
+plt.plot(x,y,"k-",label="Original Gaussian")
+plt.plot(x,shift(y,len(y)/2),"r-",label="Shifted Gaussian")
+plt.xlabel("x",fontsize=14)
+plt.ylabel("y",fontsize=14)
+plt.legend(fontsize=11)
+plt.savefig("problem_1.png",bbox_inches="tight",dpi=500)
 plt.show()
