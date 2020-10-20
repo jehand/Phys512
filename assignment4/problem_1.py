@@ -3,11 +3,12 @@ from numpy.fft import fft,ifft
 import matplotlib.pyplot as plt
 
 #Defining the Gaussian with mean=0 and sigma=1
-x = np.linspace(-5,5,100)
+x = np.linspace(-5,5,101)
 y = (1/np.sqrt(2*np.pi))*np.exp(-x**2/2)
 
 #A shit in a fourier transform can be thought of as a adding a phase term (shift theorem)
-def shift(arr,delx): #arr is the initial array and x is the x-amount to be shifted by
+def shift(arr,delx): #arr is the initial array and x is the x-amount to be shifted by. Should make sure that delx is an integer.
+    delx = int(delx)
     f = fft(arr)
     N = len(arr)
     k = np.linspace(0,N-1,N)
