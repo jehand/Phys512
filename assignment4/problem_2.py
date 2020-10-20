@@ -10,7 +10,8 @@ def corr(arr1,arr2):
 x = np.linspace(-5,5,100)
 y = (1/np.sqrt(2*np.pi))*np.exp(-x**2/2) #We define a Gaussian centered at 0 with sigma=1.
 
-#plt.plot(x,y,label="Original Gaussian")
-plt.plot(x,corr(y,y),label="Correlation function")
-plt.legend()
+plt.plot(x,corr(y,y),color="teal",label="Correlation function")
+plt.xlabel("x",fontsize=14)
+plt.ylabel("Correlation Function",fontsize=14)
+plt.savefig("problem_2.png",bbox_inches="tight",dpi=500)
 plt.show()
