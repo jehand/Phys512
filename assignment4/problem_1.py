@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 x = np.linspace(-5,5,101)
 y = (1/np.sqrt(2*np.pi))*np.exp(-x**2/2)
 
-#A shit in a fourier transform can be thought of as a adding a phase term (shift theorem)
+#A shit in a fourier transform can be thought of as a adding a phase term (shift theorem), we do this with a delta function
 def shift(arr,delx): #arr is the initial array and x is the x-amount to be shifted by. Should make sure that delx is an integer.
     delx = int(delx)
     f = fft(arr)
-    N = len(arr)
-    k = np.linspace(0,N-1,N)
-    exp = np.exp(-2*complex(0,1)*np.pi*k*delx/N)
-    return np.real(ifft(f*exp))
+    #We make a delta function
+    arr2 = np.zeros(len(arr)); arr2[delx] = 1
+    g = fft(arr2)
+    return np.real(ifft(f*g))
 
 plt.plot(x,y,"k-",label="Original Gaussian")
 plt.plot(x,shift(y,len(y)/2),"r-",label="Shifted Gaussian")
