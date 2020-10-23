@@ -34,11 +34,12 @@ plt.ylabel(r"Residauls ($10^{-11}$)",fontsize=12)
 #plt.savefig("problem_5_analyticres.png",bbox_inches="tight",dpi=500)
 plt.show()
 
-print("Mean Residual=",np.mean(res))
-print("Residual STD=",np.std(res,ddof=1))
+#print("Mean Residual=",np.mean(res))
+#print("Residual STD=",np.std(res,ddof=1))
 
 #Windowing: choose the window function to be 0.5-0.5cos(2πx/N) (i.e. the Hann window)
-ywind = np.hanning(N) #numpy function for the Hann window
+xx = np.linspace(0,N-1,N)/N
+ywind = 0.5*(1-np.cos(2*np.pi*xx))
 fftnew = fft(y*ywind)[:int(len(y)/2)]
 plt.plot(freq,np.abs(fftnew),color="darkblue",linewidth=2,label="With Hann Window")
 plt.plot(freq,np.abs(fftsine),"r-",linewidth=2,label="Without Hann Window")
@@ -58,14 +59,37 @@ plt.legend(fontsize=12)
 plt.show()
 
 #Fourier transform of the window
-ywind = np.hanning(N+1)
 ywindfft = fft(ywind)
+print("Showing the Fourier Transform of the Window =", np.real(ywindfft)/N)
 
-def wind(k):
-    first = 0.5*(np.sin(np.pi*N*k))/np.sin(np.pi*k)
-    second = 0.25*np.exp(-complex(0,1)*np.pi/N)*(np.sin(np.pi*N*(k-(1/N))))/np.sin(np.pi*(k-(1/N)))
-    third = 0.25*np.exp(complex(0,1)*np.pi/N)*(np.sin(np.pi*N*(k+(1/N))))/np.sin(np.pi*(k+(1/N)))
-    return np.exp(-complex(0,1)*np.pi*k*(N-1))*(first+second+third)
+"""
+#The analytic solution we produced if you want to check, however the results are not great
+def window(k):
+    first = (1-np.exp(-2*np.pi*complex(0,1)*k))/(1-np.exp(-2*np.pi*complex(0,1)*k/N))
+    second = (1-np.exp(-2*np.pi*complex(0,1)*(k+1)))/(1-np.exp(-2*np.pi*complex(0,1)*(k+1)/N))
+    third = (1-np.exp(-2*np.pi*complex(0,1)*(k-1)))/(1-np.exp(-2*np.pi*complex(0,1)*(k-1)/N))
+    return 0.5*(first-0.5*(second+third))
 
-print(np.abs(wind(np.linspace(0,N-1,N)/N))/N)
-print("Showing the Fourier Transform of the Window=",np.abs(ywindfft)/N)
+print("Analytic=", (window(np.linspace(0,N-1,N)))/N)"""
+
+#Recreating the window function with some code ;)
+fftsine = fft(y) #so we get the entire transform as we had cut out half of it before
+fftwindowm = []
+for i in range(0,len(fftsine)):
+    if i==0: #remember that it is symmetric, so we can find neighbor terms even for the boundary terms
+        fftwindowm.append(0.5*fftsine[i]-0.25*(fftsine[-1]+fftsine[i+1]))
+        continue
+    if i==len(fftsine)-1: #same as above
+        fftwindowm.append(0.5*fftsine[i]-0.25*(fftsine[0]+fftsine[i-1]))
+        continue
+    newval = 0.5*fftsine[i]-0.25*(fftsine[i-1]+fftsine[i+1])
+    fftwindowm.append(newval)
+fftwindowm = fftwindowm[:int(len(y)/2)]
+plt.plot(freq,np.abs(fftnew),color="darkblue",linewidth=2,label="Normal Method")
+plt.plot(freq,np.abs(fftwindowm),"r--",linewidth=2,label="Using Neighbors")
+plt.xlabel("Frequency (Hz)",fontsize=12)
+plt.ylabel("Amplitude",fontsize=12)
+plt.legend(fontsize=12)
+plt.show()
+
+print("Discrepancy =", np.mean(np.abs(fftwindowm)-np.abs(fftnew)))
