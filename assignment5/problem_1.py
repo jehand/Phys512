@@ -6,6 +6,7 @@ from simple_read_ligo import read_template, read_file
 from numpy.fft import rfft, irfft, rfftfreq
 from scipy.signal import tukey
 from scipy.ndimage import gaussian_filter
+from correlation import corr
 
 os.chdir('/Users/jehandastoor/Phys512/assignment5/ligodata') #changing the directory to the one with the data
 
@@ -38,7 +39,7 @@ n = len(strain_H) #number of points are the same for H and L
 window = tukey(n,alpha=0.5) #defining our Tukey window with 0.5 the window inside tapered region
 
 #--------------------------------------------
-# We now determine our noise model for our data
+# We now determine the noise model for our data
 #--------------------------------------------
 
 #First, calculate the power spectrums and frequencies multiplied by the window
@@ -51,30 +52,69 @@ freq = rfftfreq(n,d=time)
 #Next, we arbitrarily only use the region between [70Hz,1690Hz]
 minindex = (np.abs(freq-70)).argmin() #lower cutoff = 70Hz
 maxindex = (np.abs(freq-1690)).argmin() #upper cutoff = 1690Hz
-power_H = power_H[minindex:maxindex]
-power_L = power_L[minindex:maxindex]
-power_tempH = power_tempH[minindex:maxindex]
-power_tempL = power_tempL[minindex:maxindex]
-freq = freq[minindex:maxindex]
+power_Hcut = power_H[minindex:maxindex]
+power_Lcut = power_L[minindex:maxindex]
+power_tempHcut = power_tempH[minindex:maxindex]
+power_tempLcut = power_tempL[minindex:maxindex]
+freqcut = freq[minindex:maxindex]
 
-#We then convolve our answer with a Gaussian filter
-power_smoothH = gaussian_filter(power_H,sigma=75)
-power_smoothL = gaussian_filter(power_L,sigma=75)
+#We then convolve our answer with a Gaussian filter with sigma arbitrarily chosen as 75 to give best results
+power_smoothH = gaussian_filter(power_Hcut,sigma=75)
+power_smoothL = gaussian_filter(power_Lcut,sigma=75)
 
 #Plotting the Hanford data first
-plt.loglog(freq,power_tempH,label="Template")
-plt.loglog(freq,power_H,label="Windowed Data")
-plt.loglog(freq,power_smoothH,label="Smoothed Data")
+plt.loglog(freqcut,power_tempHcut,label="Template")
+plt.loglog(freqcut,power_Hcut,label="Windowed Data")
+plt.loglog(freqcut,power_smoothH,label="Smoothed Data")
 plt.xlabel("Frequency (Hz)",fontsize=12)
 plt.ylabel("Power Spectrurm",fontsize=12)
 plt.legend(fontsize=12)
 plt.show()
 
 #Now plotting the Livingston data
-plt.loglog(freq,power_tempL,label="Template")
-plt.loglog(freq,power_L,label="Windowed Data")
-plt.loglog(freq,power_smoothL,label="Smoothed Data")
+plt.loglog(freqcut,power_tempLcut,label="Template")
+plt.loglog(freqcut,power_Lcut,label="Windowed Data")
+plt.loglog(freqcut,power_smoothL,label="Smoothed Data")
 plt.xlabel("Frequency (Hz)",fontsize=12)
 plt.ylabel("Power Spectrurm",fontsize=12)
 plt.legend(fontsize=12)
 plt.show()
+
+
+#Finally, our noise matrix (1D array in this case) is just our smoothed power spectrums
+#However, since we have excluded a subset of our data, we have to include these in our noise matrix again. As we normally use N^-1, we make these   
+#values = infinity so that we are not dividing by zero and they lead to no contribution. 
+noise = np.ones(n)*np.infty
+N_H = noise.copy()
+N_L = noise.copy()
+N_H[minindex:maxindex] = power_smoothH.copy()
+N_L[minindex:maxindex] = power_smoothL.copy()
+
+#--------------------------------------------
+# Using this noise matrix, we now use the method of matched filters to calculate our whitened data set 
+# i.e. calculating N^-1/2 A and N^-1/2 d where A is our template and d our data
+#--------------------------------------------
+
+
+
+#--------------------------------------------
+# We now proceed to calculate the SNR's for each detector and the combined system
+#--------------------------------------------
+
+
+
+#--------------------------------------------
+# Comparison of the SNR from the scatter of the matched filter to the analytic SNR from our model
+#--------------------------------------------
+
+
+
+#--------------------------------------------
+# Finding the mid-point frequency
+#--------------------------------------------
+
+
+
+#--------------------------------------------
+# Finding the time of arrival of the GW
+#--------------------------------------------
