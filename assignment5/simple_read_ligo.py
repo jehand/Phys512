@@ -2,7 +2,6 @@ import numpy
 from matplotlib import pyplot as plt
 import h5py
 import glob
-plt.ion()
 
 def read_template(filename):
     dataFile=h5py.File(filename,'r')
