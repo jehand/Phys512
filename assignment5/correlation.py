@@ -1,8 +1,8 @@
 import numpy as np
-from numpy.fft import fft,ifft
+from numpy.fft import rfft,irfft
 import matplotlib.pyplot as plt
 
-def corr(arr1,arr2):
-    fft1 = fft(arr1)
-    fft2 = fft(arr2)
-    return ifft(fft1*np.conj(fft2))
+def corr(arr1,arr2,n):
+    fft1 = rfft(arr1)
+    fft2 = rfft(arr2)
+    return irfft(np.conj(fft1)*fft2,n)
