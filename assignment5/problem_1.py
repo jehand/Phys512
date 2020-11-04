@@ -25,7 +25,6 @@ event = json.load(open(fnjson,"r"))[eventname]
 fn_H = event['fn_H1']               # File name for H data
 fn_L = event['fn_L1']               # File name for L data
 fn_template = event['fn_template']  # File name for template waveform
-fs = event['fs']                    # Set sampling rate
 tevent = event['tevent']            # Set approximate event GPS time
 fband = event['fband']              # frequency band for bandpassing signal
 
@@ -35,7 +34,6 @@ template_H, template_L = read_template(fn_template)
 
 #As dt is the same for both Hanford and Livingston, we use time_H for simplicity
 time = time_H
-fs = 1/time
 n = len(strain_H) #number of points are the same for H and L
 window = tukey(n,alpha=0.5) #defining our Tukey window with 0.5 the window inside tapered region
 
