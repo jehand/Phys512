@@ -257,3 +257,15 @@ dist = 3002*1000 #distance in metres
 posituncert = dist/c
 print("Theoretical Uncert =", posituncert, "Calculated Uncert From Max's =", np.abs(arrival_H-arrival_L))
 print("Uncert Using std's =", np.abs(p_H[1]-p_L[1])+(p_H[0]+p_L[0]))
+
+#--------------------------------------------
+# Angular Positional Uncertainty
+#--------------------------------------------
+
+#First we calculate the overall uncert for the time delay, alpha_t.
+time_delay = np.abs(arrival_H-arrival_L)
+alpha_t = np.sqrt(p_H[0]**2 + p_L[0]**2)
+
+#Calculating angular positional uncertainty from the equation determined in the assignment write up.
+alpha_theta = (1/posituncert) * alpha_t
+print("Angular Positional Uncertainty =", alpha_theta)
