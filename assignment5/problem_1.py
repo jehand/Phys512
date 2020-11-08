@@ -7,7 +7,8 @@ from numpy.fft import rfft, irfft, rfftfreq
 from scipy.signal import tukey
 from scipy.ndimage import gaussian_filter
 from correlation import corr
-from scipy.constants import c 
+from scipy.constants import c
+from scipy.optimize import curve_fit 
 
 os.chdir('/Users/jehandastoor/Phys512/assignment5/ligodata') #changing the directory to the one with the data
 
@@ -191,15 +192,15 @@ print("Scatter SNR Combined std_L =", std, "Discrepancy_L =", std-sigma_m, "% Di
 #--------------------------------------------
 
 #Calculate a cumulative sum of the PS of whitened template ("template and noise model") and find where it is equal to half the power
-whitened_H_PS = np.abs(rfft(whitened_H_temp))**2
-whitened_L_PS = np.abs(rfft(whitened_L_temp))**2
+whitened_H_temp_PS = np.abs(rfft(whitened_H_temp))**2
+whitened_L_temp_PS = np.abs(rfft(whitened_L_temp))**2
 
-cumsum_H = np.cumsum(whitened_H_PS)
-cumsum_L = np.cumsum(whitened_L_PS)
+cumsum_H = np.cumsum(whitened_H_temp_PS)
+cumsum_L = np.cumsum(whitened_L_temp_PS)
 
-midfreq_H = freq[np.argmin(abs(cumsum_H-np.sum(whitened_H_PS)/2))]
+midfreq_H = freq[np.argmin(abs(cumsum_H-np.sum(whitened_H_temp_PS)/2))]
 print("Mid frequency Hanford =", midfreq_H)
-midfreq_L = freq[np.argmin(abs(cumsum_L-np.sum(whitened_L_PS)/2))]
+midfreq_L = freq[np.argmin(abs(cumsum_L-np.sum(whitened_L_temp_PS)/2))]
 print("Mid frequency Livingston =", midfreq_L)
 
 #--------------------------------------------
@@ -207,13 +208,52 @@ print("Mid frequency Livingston =", midfreq_L)
 #--------------------------------------------
 
 #We find the max SNR for each event per detector and compare the times at which these occur
-arrival_H = xtimes[np.argmax(np.abs(SNR_H))]
-arrival_L = xtimes[np.argmax(np.abs(SNR_L))]
+maxind_H = np.argmax(np.abs(SNR_H))
+arrival_H = xtimes[maxind_H]
+maxind_L = np.argmax(np.abs(SNR_L))
+arrival_L = xtimes[maxind_L]
 print("Arrival Time H =", arrival_H, "Arrival Time L =", arrival_L)
+
+#We can determine "how well" we can localise the time by fitting the arrival with a Gaussian and taking the std.
+#For simplicity, rather than writing code for a non-linear fit, I am just going to use scipy.optimize
+#First, define our Gaussian function
+def Gaussian(x,std,u,A):
+    exponent = (x-u)**2 / (2*(std**2))
+    return A * np.exp(-exponent)
+
+#Next, use scipy.optimize. We are going to pick enough points to fit the main peaks. This seems to be around 0.0012s each side or 6 points.
+width = 6
+p_H, cov_H = curve_fit(Gaussian, xtimes[maxind_H-width:maxind_H+width], SNR_H[maxind_H-width:maxind_H+width], p0=[0.02,arrival_H,20], bounds=(0,50))
+p_L, cov_L = curve_fit(Gaussian, xtimes[maxind_L-width:maxind_L+width], SNR_L[maxind_L-width:maxind_L+width], p0=[0.02,arrival_L,20], bounds=(0,50))
+#We can now make our plots for both of these.
+width = 40 #So that our plots go over a larger range
+x_H = np.linspace(xtimes[maxind_H-width],xtimes[maxind_H+width],1000)
+x_L = np.linspace(xtimes[maxind_L-width],xtimes[maxind_L+width],1000)
+gaussian_H = Gaussian(x_H,*p_H)
+gaussian_L = Gaussian(x_L,*p_L)
+
+plt.plot(xtimes[maxind_H-width:maxind_H+width],SNR_H[maxind_H-width:maxind_H+width],color="dodgerblue",linewidth=1.8,label="Hanford SNR")
+plt.plot(x_H,gaussian_H,color="darkblue",linewidth=1.5,linestyle="--",label="Hanford Gaussian Fit")
+plt.xlabel("Time (s)",fontsize=12)
+plt.ylabel("SNR",fontsize=12)
+plt.legend(loc=2,fontsize=10)
+plt.savefig("/Users/jehandastoor/Phys512/assignment5/plots/arrivaltime_L.png",bbox_inches="tight",dpi=500)
+plt.show()
+
+plt.plot(xtimes[maxind_L-width:maxind_L+width],SNR_L[maxind_L-width:maxind_L+width],linewidth=1.8,color="orchid",label="Livingston SNR")
+plt.plot(x_L,gaussian_L,color="purple",linewidth=1.5,linestyle="--",label="Livingston Gaussian Fit")
+plt.xlabel("Time (s)",fontsize=12)
+plt.ylabel("SNR",fontsize=12)
+plt.legend(loc=2,fontsize=10)
+plt.savefig("/Users/jehandastoor/Phys512/assignment5/plots/arrivaltime_H.png",bbox_inches="tight",dpi=500)
+plt.show()
+
+print("Hanford Gaussian Arrival =", p_H[1], "±", np.sqrt(cov_H[1][1]), "Livinston Gaussian Arrival =", p_L[1], "±", np.sqrt(cov_L[1][1]))
+print("Hanford std =", p_H[0], "±", np.sqrt(cov_H[0][0]), "Livinston std =", p_L[0], "±", np.sqrt(cov_L[0][0]))
 
 #Positional uncertainty can now be theoretically calculated by assuming the GW travels at the speed of light 
 #and using the measured distance between both detectors.
- 
 dist = 3002*1000 #distance in metres
 posituncert = dist/c
-print("Theoretical Uncert =", posituncert, "Calculated Uncert =", np.abs(arrival_H-arrival_L))
+print("Theoretical Uncert =", posituncert, "Calculated Uncert From Max's =", np.abs(arrival_H-arrival_L))
+print("Uncert Using std's =", np.abs(p_H[1]-p_L[1])+(p_H[0]+p_L[0]))
