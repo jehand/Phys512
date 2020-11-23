@@ -29,15 +29,15 @@ powernumbs = power(rands)
 
 problorentz = np.exp(-np.abs(lorentznumbs)) / (1/(1+lorentznumbs**2))
 probgauss = np.exp(-gaussnumbs) / (3*np.exp(-0.5 * (gaussnumbs**2))/np.sqrt(2*np.pi))
-probpower = np.exp(-(powernumbs-1)) / (powernumbs**(1/(1+alpha))) #this is wrong, remember to change
+probpower = np.exp(-(powernumbs-1)) / (powernumbs**(alpha)) 
 
 acceptlorentz = acceptrands < problorentz
 acceptgauss = acceptrands < probgauss
 acceptpower = acceptrands < probpower
 
-#assert(np.max(problorentz) <= 1) #Just to check that the probability is always less than 1, i.e. that our distribution is always greater than exp.
-#assert(np.max(probgauss) <= 1) #This is just a test to prove that it can never work for a Gaussian
-#assert(np.max(probpower) <= 1)
+assert(np.max(problorentz) <= 1) #Just to check that the probability is always less than 1, i.e. that our distribution is always greater than exp.
+#assert(np.max(probgauss) <= 1) #This is just a test to prove that it can never work for a Gaussian as it cannot be a bounding distribution
+#assert(np.max(probpower) <= 1) #This holds as well because the power distribution can be a bounding distribution
 
 #We can calculate our acceptance rate for each distribution
 proportionlorentz = np.sum(acceptlorentz)/n
@@ -74,7 +74,7 @@ plt.plot(x,np.exp(-(x-1)),"r-",label="Predicted")
 plt.xlabel("Number", fontsize=14)
 plt.ylabel("Frequency", fontsize=14)
 plt.legend(fontsize=12)
-plt.xlim(1,5.2)
+plt.xlim(0,5.2)
 plt.ylim(0,1.05)
 if saveplot: plt.savefig("plots/problem_2_power.png", bbox_inches="tight", dpi=500)
 plt.show()
