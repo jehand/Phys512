@@ -8,7 +8,7 @@ n = 10000000 #number of points
 u,v = np.random.rand(n), 4*(np.random.rand(n)-0.5)*np.exp(-1) #where u = [0,1] and v is defined as in the LaTex document to be v = [-2√e,2√e]. 
 rat = v/u
 accept = u < np.sqrt(np.exp(-v/u))
-acceptratio = np.sum(accept)/(2*n)
+acceptratio = np.sum(accept)/(2*n) #calculating the acceptance rate where at least 2 uniform deviates are required to produce 1 exponential.
 print("Acceptance rate =", acceptratio)
 
 #Plotting the results
