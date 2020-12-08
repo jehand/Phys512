@@ -39,69 +39,58 @@ class Nbody:
         Sets whether we are going to use periodic or non-perioud boundary conditions. "periodic" meaning periodic and "normal" meaning non-periodic.
     """
 
-    def __init__(self,r=0,v=0,m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal"):
-        self.m = m.copy()
-        self.G = G.copy()
-        self.npart = npart.copy()
-        self.softening = softening.copy()
-        self.size = size.copy()
-        self.dt = dt.copy()
-        self.bc_type = bc_type.copy()
-        if r:
-            if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
-                self.r = r.copy()
-            else:
-                try:
-                    self.r = np.ndarray(r) #Converting to ndarray if it is not
-                except:
-                    print("An exception occurred: r is not of the form np.ndarray")
-                    quit()
+    def __init__(self,r=None,v=None,m=[],G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal"):
+        self.G = G
+        self.npart = npart
+        #Defining values for m if not provided to be 1 for each particle
+        if m == []:
+            self.m = m.copy()
         else:
-            self.r = np.random.randint(0,self.size,self.npart,size=(3,self.npart))
-        self.x, self.y, self.z = self.r[:,0], self.r[:,1], self.r[:,2]
-        
-        if v:
-            if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
-                self.v = v.copy()
-            else:
-                try:
-                    self.v = np.ndarray(v) #Converting to ndarray if it is not
-                else:
-                    print("An exception occurred: v is not of the form np.ndarray")
-                    quit()
-        else:
-            self.v = np.random.randint(-1,1,self.npart,size=(3,self.npart))
-        self.vx, self.vy, self.vz = self.v[:,0], self.v[:,1], self.v[:,2]
-        self.acc = np.zeros([npart,3])
+            self.m = np.ones(self.npart)
+        self.softening = softening
+        self.size = size
+        self.dt = dt
+        self.bc_type = bc_type
+        self.r = r.copy()
+        self.x, self.y, self.z = self.r[0], self.r[1], self.r[2]
+        self.v = v.copy()
+        self.vx, self.vy, self.vz = self.v[0], self.v[1], self.v[2]
+        self.acc = np.zeros([self.npart,3])
+        self.greens = self.Greens_function()
 
     def Greens_function(self):
         ticks = np.linspace(0,self.size-1,self.size)
         kx, ky, kz = np.meshgrid(ticks,ticks,ticks)
         greens = 1/(4*np.pi*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2))
-        greens[0,0,0] = 0
+        greens[0,0,0] = 1/(4*np.pi*self.softening**2)
         greens += np.flip(greens,0)
         greens += np.flip(greens,1)
-        self.greens = greens.copy()
+        return greens
 
     def get_dens_field(self):
         #We can get our grid using Green's function and set the singularity ourselves to 0.
         if self.bc_type == "normal":
-            grid = np.histogramdd(np.round(self.x).astype(int),np.round(self.y).astype(int),np.round(self.z).astype(int), bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
+            grid = np.histogramdd([np.round(self.x).astype(int),np.round(self.y).astype(int),np.round(self.z).astype(int)], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
         if self.bc_type == "periodic":
-            grid = np.histogramdd((np.round(self.x)%self.size).astype(int),(np.round(self.y)%self.size).astype(int),(np.round(self.z)%self.size).astype(int), bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
-        rho = grid.copy()
-        return rho
+            grid = np.histogramdd([(np.round(self.x)%self.size).astype(int),(np.round(self.y)%self.size).astype(int),(np.round(self.z)%self.size).astype(int)], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
+        self.grid = grid.copy()
+        return self.grid
 
     def get_potential(self,dens_field,greens):
         dens_field_fft = np.fft.rfftn(dens_field)
         potential_fft = np.fft.rfftn(greens)
-        potential = np.irfftn(dens_field_fft * potential_fft) #Convolving the density field with the potential for a particle
+        potential = np.fft.irfftn(dens_field_fft * potential_fft) #Convolving the density field with the potential for a particle
         return potential
 
     def get_forces(self,potential,grid):
         #We apply the leapfrog method later in the evolve_system stage
-        self.F = -np.gradient(potential) * self.G
-        self.Fx, self.Fy, self.Fz = self.F[:,0], self.F[:,0], self.F[:,0]
+        #Furthermore, we know we can calculate the gradient as f'(x) = f(x+dx) - f(x-dx) / 2dx which gives us the following
+        #self.F = -np.gradient(potential) * self.G
+        #self.Fx, self.Fy, self.Fz = self.F[0], self.F[1], self.F[2]
+        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.G * self.grid
+        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.G * self.grid
+        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.G * self.grid
+        #self.F = [self.Fx,self.Fy,self.Fz] #this is wrong 
         """
         self.vx += self.Fx[(np.round(self.x)%self.size).astype(int),(np.round(self.y)%self.size).astype(int),(np.round(self.z)%self.size).astype(int)]*self.dt
         self.vy += self.Fy[(np.round(self.x)%self.size).astype(int),(np.round(self.y)%self.size).astype(int),(np.round(self.z)%self.size).astype(int)]*self.dt
@@ -125,15 +114,41 @@ class Nbody:
         v_new = v + 0.5*(a+a_new)*dt
         return r_new,v_new
 
-    def evolve_system(self):
+    def evolve_system(self,density):
         #This is the function that will evolve the system
-        dens = self.get_dens_field()
+        dens = density.copy()#self.get_dens_field()
         pot = self.get_potential(dens,self.greens)
         force = self.get_forces(pot,dens)
-        self.a_new = self.F / self.m[:,None]
-        self.r, self.v = self.leap_frog(self.r, self.v, self.acc, self.acc_new,self.dt)
+        self.acc_new = np.zeros([self.npart,3])
+        for i in range(self.npart):
+            self.acc_new[i][0] += self.Fx[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
+            self.acc_new[i][1] += self.Fy[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
+            self.acc_new[i][2] += self.Fz[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
+
+        #self.acc_new = self.F / self.m[:,None]
+        self.acc_new = self.acc_new.T.copy()
+        self.acc = self.acc.T.copy()
+        self.r, self.v = self.leap_frog(self.r, self.v, self.acc, self.acc_new, self.dt)
         
         #Change the value of a now
         #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
+        self.r = self.r.T.copy()
+        self.v = self.v.T.copy()
+        self.m = self.m.T.copy()
         if self.bc_type == "normal":
-            ind = np.argwhere()
+            ind_top = np.argwhere((self.r > self.size -1 ))
+            ind_bot = np.argwhere((self.r < 0))
+            ind = [i for i in np.append(ind_top,ind_bot)]
+            self.v = np.delete(self.v,ind,axis=0)
+            self.acc_new = np.delete(self.acc_new,ind,axis=0)
+            self.m = np.delete(self.m,ind,axis=0)
+            self.r = np.delete(self.r,ind,axis=0)
+            self.acc = np.delete(self.acc,ind,axis=0)
+        self.acc = self.acc_new.copy()
+        self.r = self.r.T.copy()
+        self.v = self.v.T.copy()
+        self.m = self.m.T.copy()
+        self.acc_new = self.acc_new.T.copy()
+        self.acc = self.acc.T.copy()
+        #self.x, self.y, self.z = self.r[0].copy(), self.r[1].copy(), self.r[2].copy()
+        #self.vx, self.vy, self.vz = self.v[0].copy(), self.v[1].copy(), self.v[2].copy()

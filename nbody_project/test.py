@@ -45,7 +45,7 @@ class particles:
         #using the closest distance method by rounding the particle location
         A=np.histogram2d((np.round(x)%grid_size).astype(int),(np.round(y)%grid_size).astype(int),bins=grid_size,range=[[0, grid_size], [0, grid_size]])[0]*self.opts['m']
 
-#       Convolving the greens function with the density grid
+        #Convolving the greens function with the density grid
         Gr_ft=self.Gr_ft
         rho_ft=np.fft.fft2(A)
     
@@ -82,18 +82,18 @@ class particles:
 if __name__=='__main__':
      
     #setting the parameters
-    n=50
+    n=10
     grid_size=100
     m=20
     time=300
-    dt=0.01
+    dt=1
     #initializing the particle
     part=particles(m=m,npart=n,dt=dt,grid_size=grid_size)
     
     #getting the density and the potential
     A,pot=part.get_grid(part.x,part.y)
     x_new,y_new=part.get_force(part.x,part.y,pot,A)
-    
+    print(abs(A).shape)
     
     count=0
     kin_energy=np.zeros(int(time//dt))
@@ -103,7 +103,6 @@ if __name__=='__main__':
         A_new,pot=part.get_grid(x_new,y_new)
 
         x_new,y_new=part.get_force(x_new,y_new,pot,A_new)
-        
         kin_energy[count]=np.real(part.kin_energy)
         plt.clf()
         plt.imshow(abs(A_new))
