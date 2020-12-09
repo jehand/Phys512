@@ -6,10 +6,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from nbody_class import Nbody
 from scipy.interpolate import InterpolatedUnivariateSpline as iuspline
 import tensorflow.compat.v1 as tf
+from matplotlib import gridspec
 tf.disable_v2_behavior()
 #------------------------------------------------------------------------------
 # Making a class to produce a constant evolving plot of the nBody simulation from class Nbody. This will be the only classs that needs to be called 
-# to run the simulation.
+# to run the simulation. The animation will be produced using transparent voxels from Google's TensorFlow.
 #------------------------------------------------------------------------------
 
 class Animation:
@@ -81,31 +82,44 @@ class Animation:
                     print("An exception occurred: v is not of the form np.ndarray")
                     quit()
         else:
-            self.v = np.random.randint(-1,1,size=(3,self.npart))
-        self.vx, self.vy, self.vz = self.v[0], self.v[1], self.v[2]
+            self.v = np.random.randint(-1,2,size=(3,self.npart))
         
         #Call the class Nbody with our current settings
         self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type)
 
-    def animate(self,time=50,save_plt=False):
-        tf.reset_default_graph()
-        for i in np.arange(0,time,self.dt):
-            density = self.particles.get_dens_field()
-            self.particles.evolve_system(density)
-            tfdensity = tf.constant(abs(density))
+    def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation
+        #tf.reset_default_graph()
+        plt.ion()
+        fig=plt.figure(figsize=(8,8))#Create 3D axes
+        gs = gridspec.GridSpec(ncols=1,nrows=2,figure=fig,height_ratios=[2,1])
+        ax=fig.add_subplot(gs[0],projection="3d",autoscale_on=False)
+
+        ax2=fig.add_subplot(gs[1])
+        ax.set_xlabel("x",fontsize=14)
+        ax.set_ylabel("y",fontsize=14)
+        ax.set_zlabel("z",fontsize=14)
+        times = list(np.arange(0,time,self.dt))
+        for i in times:
+            self.particles.evolve_system()
+            tfx, tfy, tfz = tf.constant(self.particles.x),tf.constant(self.particles.y),tf.constant(self.particles.z)
             with tf.Session() as sess:
-                istate = sess.run(tfdensity)
-            plt.clf()
-            fig=plt.figure(figsize=(10,10))#Create 3D axes
-            try: ax=fig.add_subplot(111,projection="3d")
-            except : ax=Axes3D(fig)
-            ax.scatter(istate[0, 0,:,0],istate[0, 0,:,1], istate[0, 0,:,2],color="royalblue",marker=".",s=.5)
-            ax.set_xlabel("x-coordinate",fontsize=14)
-            ax.set_ylabel("y-coordinate",fontsize=14)
-            ax.set_zlabel("z-coordinate",fontsize=14)
-            ax.xaxis.set_ticklabels([])
-            ax.yaxis.set_ticklabels([])
-            ax.zaxis.set_ticklabels([])
-            #plt.imshow(abs(density))
-            plt.pause(0.001)
-            plt.show()
+                ttfx, ttfy, ttfz = sess.run([tfx,tfy,tfz])
+            ax.clear()
+            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=10) #change the size depending on number of particles you have
+            ax.axes.set_xlim3d(0,self.size)
+            ax.axes.set_ylim3d(0,self.size)
+            ax.axes.set_zlim3d(0,self.size)
+
+            #Plotting energy
+            self.particles.energy()
+            inds = times.index(i)
+            ax2.clear()
+            ax2.axhline("k-")
+            ax2.plot(times[0:inds],self.particles.karray[0:inds],"r-",label="Kinetic Energy")
+            ax2.plot(times[0:inds],self.particles.parray[0:inds],"b-",label="Potential Energy")
+            ax2.plot(times[0:inds],self.particles.tarray[0:inds],"k-",label="Total Energy")
+            ax2.set_xlabel("Time",fontsize=14)
+            ax2.set_ylabel("Energy",fontsize=14)
+            ax2.legend(loc="upper right",fontsize=10)
+            plt.draw()
+            plt.pause(0.01)
