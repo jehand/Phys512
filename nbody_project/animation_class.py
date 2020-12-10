@@ -51,7 +51,7 @@ class Animation:
         Decides whether to save the plot produced as a .gif. False means it is not saved and vice versa.
     """
 
-    def __init__(self,r=None,v=None,m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal"):
+    def __init__(self,r=[],v=[],m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal",save_plt=False):
         self.m = m
         self.G = G
         self.npart = npart
@@ -59,25 +59,25 @@ class Animation:
         self.size = size
         self.dt = dt
         self.bc_type = bc_type
-        if r:
+        self.save_plt = save_plt
+        if len(r) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
                 self.r = r.copy()
             else:
                 try:
-                    self.r = np.ndarray(r) #Converting to ndarray if it is not
+                    self.r = np.asarray(r) #Converting to ndarray if it is not
                 except:
                     print("An exception occurred: r is not of the form np.ndarray")
                     quit()
         else:
             self.r = np.random.randint(0,self.size,size=(3,self.npart))
-        self.x, self.y, self.z = self.r[0], self.r[1], self.r[2]
         
-        if v:
+        if len(v) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
                 self.v = v.copy()
             else:
                 try:
-                    self.v = np.ndarray(v) #Converting to ndarray if it is not
+                    self.v = np.asarray(v) #Converting to ndarray if it is not
                 except:
                     print("An exception occurred: v is not of the form np.ndarray")
                     quit()
@@ -112,9 +112,10 @@ class Animation:
 
             #Plotting energy
             self.particles.energy()
-            inds = times.index(i)
+            inds = times.index(i)+1
             ax2.clear()
-            ax2.axhline("k-")
+            ax2.axhline(color="black")
+            ax2.axes.set_xlim(0,time)
             ax2.plot(times[0:inds],self.particles.karray[0:inds],"r-",label="Kinetic Energy")
             ax2.plot(times[0:inds],self.particles.parray[0:inds],"b-",label="Potential Energy")
             ax2.plot(times[0:inds],self.particles.tarray[0:inds],"k-",label="Total Energy")
@@ -122,4 +123,7 @@ class Animation:
             ax2.set_ylabel("Energy",fontsize=14)
             ax2.legend(loc="upper right",fontsize=10)
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.001)
+
+            if self.save_plt:
+                plt.savefig("figures/part1/fig"+str(inds)+".png",bbox_inches="tight",dpi=500)

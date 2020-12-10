@@ -39,7 +39,7 @@ class Nbody:
         Sets whether we are going to use periodic or non-perioud boundary conditions. "periodic" meaning periodic and "normal" meaning non-periodic.
     """
 
-    def __init__(self,r=None,v=None,m=None,G=1,npart=10,softening=0.8,size=50,dt=0.1,bc_type="normal"):
+    def __init__(self,r=[],v=[],m=None,G=1,npart=10,softening=0.8,size=50,dt=0.1,bc_type="normal"):
         self.G = G
         self.npart = npart
         #Defining values for m if not provided to be 1 for each particle
@@ -71,19 +71,16 @@ class Nbody:
         greens += np.flip(greens,2)
         return greens
 
-    def get_dens_field(self):
+    def get_dens_field(self): #Possibility of using Numba? Removed the %, because it updates anyways.
         #We can get our grid using Green's function and set the singularity ourselves to 0.
-        if self.bc_type == "normal":
-            grid = np.histogramdd([np.round(self.x).astype(int),np.round(self.y).astype(int),np.round(self.z).astype(int)], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
-        if self.bc_type == "periodic":
-            grid = np.histogramdd([(np.round(self.x)%self.size).astype(int),(np.round(self.y)%self.size).astype(int),(np.round(self.z)%self.size).astype(int)], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
+        grid = np.histogramdd([np.round(self.x).astype(int),np.round(self.y).astype(int),np.round(self.z).astype(int)], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)[0]
         self.grid = grid.copy()
         return self.grid
 
-    def get_potential(self,dens_field,greens):
+    def get_potential(self,dens_field,greens): 
         dens_field_fft = np.fft.rfftn(dens_field)
-        potential_fft = np.fft.rfftn(greens)
-        potential = np.fft.irfftn(dens_field_fft * potential_fft) #Convolving the density field with the potential for a particle
+        greens_fft = np.fft.rfftn(greens)
+        potential = np.fft.irfftn(dens_field_fft * greens_fft) #Convolving the density field with the potential for a particle
         potential = potential[:self.size,:self.size,:self.size]
         if self.bc_type == "normal": #Setting the value to 0 on the edge of the boundaries; possible improvements by convolving with window?
             potential[0:,0,0] = 0
@@ -105,13 +102,13 @@ class Nbody:
     def get_forces(self,potential,grid):
         #We apply the leapfrog method later in the evolve_system stage
         #Furthermore, we know we can calculate the gradient as f'(x) = f(x+dx) - f(x-dx) / 2dx which gives us the following
-        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.G * self.grid
-        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.G * self.grid
-        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.G * self.grid
+        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.G * grid
+        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.G * grid
+        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.G * grid
 
     def energy(self):
         #Calculate the energy of the system at each stage
-        kinetic = 0.5 * np.sum(self.m * np.sqrt(self.vx**2 + self.vy**2 + self.vz**2))
+        kinetic = 0.5 * np.sum(self.m * np.sqrt(self.vx**2 + self.vy**2 + self.vz**2)**2)
         potential = -0.5*np.sum(self.potential)
         total = kinetic + potential
         self.karray.append(kinetic)
@@ -128,25 +125,24 @@ class Nbody:
         #This is the function that will evolve the system
         dens = self.get_dens_field()
         pot = self.get_potential(dens,self.greens)
-        force = self.get_forces(pot,dens)
+        self.get_forces(pot,dens)
         self.acc_new = np.zeros([self.npart,3])
-        for i in range(self.npart):
-            self.acc_new[i][0] += self.Fx[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
-            self.acc_new[i][1] += self.Fy[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
-            self.acc_new[i][2] += self.Fz[(np.round(self.x[i])%self.size).astype(int),(np.round(self.y[i])%self.size).astype(int),(np.round(self.z[i])%self.size).astype(int)] / self.m[i]
-
-        #self.acc_new = self.F / self.m[:,None]
+        for i in range(self.npart): #update:removed %self.size for each self.r
+            self.acc_new[i][0] += self.Fx[(np.round(self.x[i])).astype(int),(np.round(self.y[i])).astype(int),(np.round(self.z[i])).astype(int)] / self.m[i]
+            self.acc_new[i][1] += self.Fy[(np.round(self.x[i])).astype(int),(np.round(self.y[i])).astype(int),(np.round(self.z[i])).astype(int)] / self.m[i]
+            self.acc_new[i][2] += self.Fz[(np.round(self.x[i])).astype(int),(np.round(self.y[i])).astype(int),(np.round(self.z[i])).astype(int)] / self.m[i]
         self.acc_new = self.acc_new.T.copy()
         self.acc = self.acc.T.copy()
-        print("Before",self.r,self.v)
+        print(self.r)
         self.r, self.v = self.leap_frog(self.r, self.v, self.acc, self.acc_new, self.dt)
-        print("After",self.r,self.v)
-
+        print(self.r)
         #Change the value of a now
         #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
         self.r = self.r.T.copy()
         self.v = self.v.T.copy()
         self.m = self.m.T.copy()
+        if self.bc_type == "periodic":
+            self.r = self.r % (self.size-1)
         if self.bc_type == "normal":
             ind_top = np.argwhere((self.r > self.size -1 ))
             ind_bot = np.argwhere((self.r < 0))

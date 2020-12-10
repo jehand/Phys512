@@ -10,14 +10,14 @@ tf.disable_v2_behavior()
 import scipy.constants as cons
 
 #Set the parameters. Do not define r and v so that they are generated randomly.
-r = None
-v = None
 npart = 100
+r = []
+v = []
 m = None
 time = 50
-dt = 1 
-size = 100
+dt = 0.001
+size = 50
 G = 1 #cons.G #Importing the value of G
 
-ani = Animation(m=m,npart=npart,size=size,dt=dt,G=G,bc_type="periodic")
+ani = Animation(m=m,npart=npart,size=size,dt=dt,G=G,bc_type="normal")
 ani.animate(time=time,save_plt=False)
