@@ -87,7 +87,7 @@ class Animation:
         #Call the class Nbody with our current settings
         self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type)
 
-    def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation
+    def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation, scale opacity by density
         #tf.reset_default_graph()
         plt.ion()
         fig=plt.figure(figsize=(8,8))#Create 3D axes
@@ -123,7 +123,7 @@ class Animation:
             ax2.set_ylabel("Energy",fontsize=14)
             ax2.legend(loc="upper right",fontsize=10)
             plt.draw()
-            plt.pause(0.001)
+            plt.pause(0.01)
 
             if self.save_plt:
                 plt.savefig("figures/part1/fig"+str(inds)+".png",bbox_inches="tight",dpi=500)

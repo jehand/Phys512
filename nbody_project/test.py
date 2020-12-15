@@ -86,14 +86,13 @@ if __name__=='__main__':
     grid_size=100
     m=20
     time=300
-    dt=1
+    dt=0.5
     #initializing the particle
     part=particles(m=m,npart=n,dt=dt,grid_size=grid_size)
     
     #getting the density and the potential
     A,pot=part.get_grid(part.x,part.y)
     x_new,y_new=part.get_force(part.x,part.y,pot,A)
-    print(abs(A).shape)
     
     count=0
     kin_energy=np.zeros(int(time//dt))
