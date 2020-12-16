@@ -40,11 +40,11 @@ class Nbody:
         Sets whether we are going to use periodic or non-perioud boundary conditions. "periodic" meaning periodic and "normal" meaning non-periodic.
     """
 
-    def __init__(self,r=[],v=[],m=None,G=1,npart=10,softening=0.5,size=50,dt=0.1,bc_type="normal"):
+    def __init__(self,r=[],v=[],m=[],G=1,npart=10,softening=0.5,size=50,dt=0.1,bc_type="normal"):
         self.G = G
         self.npart = npart
         #Defining values for m if not provided to be 1 for each particle
-        if m != None:
+        if len(m) != 0:
             self.m = m.copy()
         else:
             self.m = np.ones(self.npart)
@@ -81,9 +81,12 @@ class Nbody:
         self.grid = grid.copy()
         return self.grid
 
-    def get_potential(self,dens_field): 
+    def get_potential(self,dens_field): #probably need to zero pad if our conditions are different
         dens_field_fft = np.fft.rfftn(dens_field)
         potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)) #Convolving the density field with the potential for a particle
+        #potential = 0.5*(np.roll(potential,1,axis=0)+potential)
+        #potential = 0.5*(np.roll(potential,1,axis=1)+potential)
+        #potential = 0.5*(np.roll(potential,1,axis=2)+potential)
         if self.bc_type == "normal": #Setting the value to 0 on the edge of the boundaries; possible improvements by convolving with window?
             potential[0:,0,0] = 0
             potential[0:,-1,0] = 0
@@ -103,9 +106,9 @@ class Nbody:
 
     def get_forces(self,potential):
         #We can calculate the gradient as f'(x) = f(x+dx) - f(x-dx) / 2dx which gives us the following
-        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.grid / self.dt
-        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.grid / self.dt
-        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.grid / self.dt
+        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.grid 
+        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.grid 
+        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.grid 
         print(max(abs(np.ravel(self.Fx))),max(abs(np.ravel(self.potential))))
 
     def energy(self):
@@ -136,7 +139,7 @@ class Nbody:
         self.acc_new = self.acc_new.T.copy()
         self.acc = self.acc.T.copy()
         self.r, self.v = self.leap_frog(self.r, self.v, self.acc, self.acc_new, self.dt)
-        #Change the value of a now
+        #Change the value of a
         #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
         self.r = self.r.T.copy()
         self.v = self.v.T.copy()

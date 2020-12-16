@@ -10,12 +10,12 @@ tf.disable_v2_behavior()
 import scipy.constants as cons
 
 #Set the parameters. Do not define r and v so that they are generated randomly inside the class.
-npart = 200
+npart = 2
 r = []
 v = []
 m = None
 time = 300
-dt = 0.01
+dt = 0.1
 size = 10
 G = 1 #cons.G #Importing the value of G
 

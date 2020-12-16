@@ -93,11 +93,7 @@ class Animation:
         fig=plt.figure(figsize=(8,8))#Create 3D axes
         gs = gridspec.GridSpec(ncols=1,nrows=2,figure=fig,height_ratios=[2,1])
         ax=fig.add_subplot(gs[0],projection="3d",autoscale_on=False)
-
         ax2=fig.add_subplot(gs[1])
-        ax.set_xlabel("x",fontsize=14)
-        ax.set_ylabel("y",fontsize=14)
-        ax.set_zlabel("z",fontsize=14)
         times = list(np.arange(0,time,self.dt))
         for i in times:
             self.particles.evolve_system()
@@ -105,10 +101,13 @@ class Animation:
             with tf.Session() as sess:
                 ttfx, ttfy, ttfz = sess.run([tfx,tfy,tfz])
             ax.clear()
-            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=10) #change the size depending on number of particles you have
+            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=20) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)
+            ax.set_xlabel("x",fontsize=14)
+            ax.set_ylabel("y",fontsize=14)
+            ax.set_zlabel("z",fontsize=14)
 
             #Plotting energy
             self.particles.energy()
