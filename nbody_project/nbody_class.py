@@ -105,20 +105,6 @@ class Nbody:
         potential = 0.5*(np.roll(potential,1,axis=0)+potential)
         potential = 0.5*(np.roll(potential,1,axis=1)+potential)
         potential = 0.5*(np.roll(potential,1,axis=2)+potential)
-        """if self.bc_type == "normal": #Setting the value to 0 on the edge of the boundaries; possible improvements by convolving with window?
-            potential[0:,0,0] = 0
-            potential[0:,-1,0] = 0
-            potential[0:,-1,-1] = 0
-            potential[0:,0,-1] = 0
-            potential[0,0:,0] = 0
-            potential[-1,0:,0] = 0
-            potential[0,0:,-1] = 0
-            potential[-1,0:,-1] = 0
-            potential[0,0,0:] = 0
-            potential[-1,0,0:] = 0
-            potential[0,-1,0:] = 0
-            potential[-1,-1,0:] = 0
-            potential[-1,-1,-1] = 0"""
         self.potential = potential.copy()
         return potential
 

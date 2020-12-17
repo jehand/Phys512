@@ -1,12 +1,5 @@
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from nbody_class import Nbody
-from mpl_toolkits.mplot3d import Axes3D
 from animation_class import Animation
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
 import scipy.constants as cons
 
 #Set the parameters. We set it up so that there is no motion in the z-axis for simplicity.

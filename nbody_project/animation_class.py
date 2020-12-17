@@ -1,13 +1,12 @@
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
+matplotlib.rcParams['figure.dpi'] = 150
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from nbody_class import Nbody
-from scipy.interpolate import InterpolatedUnivariateSpline as iuspline
-import tensorflow.compat.v1 as tf
 from matplotlib import gridspec
-tf.disable_v2_behavior()
+
 #------------------------------------------------------------------------------
 # Making a class to produce a constant evolving plot of the nBody simulation from class Nbody. This will be the only classs that needs to be called 
 # to run the simulation. The animation will be produced using transparent voxels from Google's TensorFlow.
@@ -54,7 +53,7 @@ class Animation:
         Decides whether to save the plot produced as a .gif. False means it is not saved and vice versa.
     """
 
-    def __init__(self,r=[],v=[],m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal",early_universe=False,save_plt=False):
+    def __init__(self,r=[],v=[],m=1,G=1,npart=10,softening=0.1,size=50,dt=0.1,bc_type="normal",early_universe=False):
         self.m = m
         self.G = G
         self.npart = npart
@@ -63,7 +62,6 @@ class Animation:
         self.dt = dt
         self.bc_type = bc_type
         self.early_universe = early_universe
-        self.save_plt = save_plt
         if len(r) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
                 self.r = r.copy()
@@ -94,18 +92,15 @@ class Animation:
     def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation, scale opacity by density
         #tf.reset_default_graph()
         plt.ion()
-        fig=plt.figure(figsize=(8,8))#Create 3D axes
+        fig=plt.figure(figsize=(6,6))#Create 3D axes
         gs = gridspec.GridSpec(ncols=1,nrows=2,figure=fig,height_ratios=[2,1])
         ax=fig.add_subplot(gs[0],projection="3d",autoscale_on=False)
         ax2=fig.add_subplot(gs[1])
         times = list(np.arange(0,time,self.dt))
         for i in times:
             self.particles.evolve_system()
-            tfx, tfy, tfz = tf.constant(self.particles.x),tf.constant(self.particles.y),tf.constant(self.particles.z)
-            with tf.Session() as sess:
-                ttfx, ttfy, ttfz = sess.run([tfx,tfy,tfz])
             ax.clear()
-            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=0.05) #change the size depending on number of particles you have
+            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=0.02,alpha=0.2) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)
@@ -128,5 +123,5 @@ class Animation:
             plt.draw()
             plt.pause(0.01)
 
-            if self.save_plt:
-                plt.savefig("figures/part1/fig"+str(inds)+".png",bbox_inches="tight",dpi=500)
+            if save_plt:
+                plt.savefig("figures/part1/fig"+str(inds)+".png",bbox_inches="tight")
