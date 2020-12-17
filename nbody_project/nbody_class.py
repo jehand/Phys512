@@ -38,9 +38,12 @@ class Nbody:
 
     bc_type : string
         Sets whether we are going to use periodic or non-perioud boundary conditions. "periodic" meaning periodic and "normal" meaning non-periodic.
+
+    early_universe : Boolean
+        Decides whether we calculate mass fluctuations according to k^-3 or not. False means normal masses and True is according to k^-3.
     """
 
-    def __init__(self,r=[],v=[],m=[],G=1,npart=10,softening=0.1,size=50,dt=0.1,bc_type="normal"):
+    def __init__(self,r=[],v=[],m=[],G=1,npart=10,softening=0.1,size=50,dt=0.1,bc_type="normal",early_universe=False):
         self.G = G
         self.npart = npart
         #Defining values for m if not provided to be 1 for each particle
@@ -57,38 +60,45 @@ class Nbody:
         self.v = v.copy()
         self.vx, self.vy, self.vz = self.v[0], self.v[1], self.v[2]
         self.acc = np.zeros([3,self.npart])
+        self.early_universe = early_universe
         self.greens = self.Greens_function()
+        
         if self.bc_type == "periodic":
             self.greens_fft = np.fft.rfftn(self.greens)
         else:
             self.greens_fft = np.fft.rfftn(self.greens,[2*self.size,2*self.size,2*self.size])
+        
         self.karray = [] #Defining array for KE
         self.parray = [] #Defining array for PE
         self.tarray = [] #Defining array for Total Energy
 
     def Greens_function(self):
-        #We can get our grid using Green's function and set the singularity ourselves.
-        ticks = np.arange(self.size)
-        kx, ky, kz = np.meshgrid(ticks,ticks,ticks)
-        norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
-        #norm[norm < self.softening] = 4*np.pi*self.G*self.softening
+        if self.early_universe:
+            kx = np.fft.rfft(self.x)
+            ky = np.fft.rfft(self.y)
+            kz = np.fft.rfft(self.z)
+            norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
+            norm[norm<soft] = 4*np.pi*self.G*self.softening
+            k = np.sqrt(kx**2 + ky**2 + kz**2)
+            self.m *= k**(-3)
+        else:
+            ticks = np.arange(self.size)
+            kx, ky, kz = np.meshgrid(ticks,ticks,ticks)
+            norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
         greens = 1/(norm)
         greens += np.flip(greens,0)
         greens += np.flip(greens,1)
         greens += np.flip(greens,2)
         return greens
 
-    def get_dens_field(self): #Possibility of using Numba? Removed the %, because it updates anyways.
-        #np.round(self.x).astype(int),np.round(self.y).astype(int),np.round(self.z).astype(int)
-        grid, edges = np.histogramdd([self.x,self.y,self.z], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)
-        self.grid = grid.copy()
-        self.edges = edges.copy()
+    def get_dens_field(self): #Possibility of using Numba?
+        self.grid, self.edges = np.histogramdd([self.x,self.y,self.z], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)
         return self.grid
 
     def get_potential(self,dens_field): #probably need to zero pad if our conditions are different
         if self.bc_type == "periodic":
             dens_field_fft = np.fft.rfftn(dens_field)
-            potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)) #Convolving the density field with the potential for a particle
+            potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)) #Convolving the density field with the potential
         else: #so that we pad
             dens_field_fft = np.fft.rfftn(dens_field,[2*self.size,2*self.size,2*self.size])
             potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)[:self.size,:self.size,:self.size]) #Convolving the density field with the potential for a particle
@@ -140,10 +150,6 @@ class Nbody:
         pot = self.get_potential(dens)
         self.get_forces(pot)
         self.acc_new = np.zeros([3,self.npart]) #does not need to be a self.
-        """for i in range(self.npart): #update:removed %self.size for each self.r
-            self.acc_new[i][0] += self.Fx[(np.floor(self.x[i])).astype("int64"),(np.floor(self.y[i])).astype("int64"),(np.floor(self.z[i])).astype("int64")] / self.m[i]
-            self.acc_new[i][1] += self.Fy[(np.floor(self.x[i])).astype("int64"),(np.floor(self.y[i])).astype("int64"),(np.floor(self.z[i])).astype("int64")] / self.m[i]
-            self.acc_new[i][2] += self.Fz[(np.floor(self.x[i])).astype("int64"),(np.floor(self.y[i])).astype("int64"),(np.floor(self.z[i])).astype("int64")] / self.m[i]"""
         #Let's try np.digitize
         part_indx = np.digitize(self.x,bins=self.edges[0],right=True)
         part_indy = np.digitize(self.y,bins=self.edges[1],right=True)

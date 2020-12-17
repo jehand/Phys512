@@ -47,11 +47,14 @@ class Animation:
     time : int
         The amount of time over which you want to run the simulation for, i.e. time/dt is the number of iterations.
 
+    early_universe : Boolean
+        Decides whether we calculate mass fluctuations according to k^-3 or not. False means normal masses and True is according to k^-3.
+
     save_plt : Boolean
         Decides whether to save the plot produced as a .gif. False means it is not saved and vice versa.
     """
 
-    def __init__(self,r=[],v=[],m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal",save_plt=False):
+    def __init__(self,r=[],v=[],m=1,G=1,npart=10,softening=1e-3,size=50,dt=0.1,bc_type="normal",early_universe=False,save_plt=False):
         self.m = m
         self.G = G
         self.npart = npart
@@ -59,6 +62,7 @@ class Animation:
         self.size = size
         self.dt = dt
         self.bc_type = bc_type
+        self.early_universe = early_universe
         self.save_plt = save_plt
         if len(r) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
@@ -82,10 +86,10 @@ class Animation:
                     print("An exception occurred: v is not of the form np.ndarray")
                     quit()
         else:
-            self.v = np.random.randint(-1,2,size=(3,self.npart))
-        
+            self.v = np.random.randint(-1,2,size=(3,self.npart))        
+
         #Call the class Nbody with our current settings
-        self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type)
+        self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type, self.early_universe)
 
     def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation, scale opacity by density
         #tf.reset_default_graph()
@@ -101,7 +105,7 @@ class Animation:
             with tf.Session() as sess:
                 ttfx, ttfy, ttfz = sess.run([tfx,tfy,tfz])
             ax.clear()
-            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=20) #change the size depending on number of particles you have
+            ax.scatter(ttfx,ttfy,ttfz,color="royalblue",marker=".",s=0.05) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)
