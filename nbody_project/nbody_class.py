@@ -1,6 +1,7 @@
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from numba import *
 
 #------------------------------------------------------------------------------
 # The first step is to design my own n-body class. I want to go about this using a Leapfrog scheme with a softened potential whereby under a certain 
@@ -62,11 +63,7 @@ class Nbody:
         self.acc = np.zeros([3,self.npart])
         self.early_universe = early_universe
         self.greens = self.Greens_function()
-        
-        if self.bc_type == "periodic":
-            self.greens_fft = np.fft.rfftn(self.greens)
-        else:
-            self.greens_fft = np.fft.rfftn(self.greens,[2*self.size,2*self.size,2*self.size])
+        self.greens_fft = np.fft.rfftn(self.greens)
         
         self.karray = [] #Defining array for KE
         self.parray = [] #Defining array for PE
@@ -78,30 +75,26 @@ class Nbody:
             ky = np.fft.rfft(self.y)
             kz = np.fft.rfft(self.z)
             norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
-            norm[norm<soft] = 4*np.pi*self.G*self.softening
+            norm[norm<self.softening] = 4*np.pi*self.G*self.softening
             k = np.sqrt(kx**2 + ky**2 + kz**2)
             self.m *= k**(-3)
         else:
             ticks = np.arange(self.size)
-            kx, ky, kz = np.meshgrid(ticks,ticks,ticks)
-            norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
-        greens = 1/(norm)
+            kx,ky,kz = np.array(np.meshgrid(ticks,ticks,ticks)) + 0.5 - self.size/2 #to center the function
+            norm = 4*np.pi*self.G*np.sqrt(kx**2+ky**2+kz**2+self.softening**2)
+        greens = -1/(norm)
         greens += np.flip(greens,0)
         greens += np.flip(greens,1)
-        greens += np.flip(greens,2)
+        greens += np.flip(greens,2) 
         return greens
 
-    def get_dens_field(self): #Possibility of using Numba?
+    def get_dens_field(self):
         self.grid, self.edges = np.histogramdd([self.x,self.y,self.z], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)
         return self.grid
 
-    def get_potential(self,dens_field): #probably need to zero pad if our conditions are different
-        if self.bc_type == "periodic":
-            dens_field_fft = np.fft.rfftn(dens_field)
-            potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)) #Convolving the density field with the potential
-        else: #so that we pad
-            dens_field_fft = np.fft.rfftn(dens_field,[2*self.size,2*self.size,2*self.size])
-            potential = np.fft.fftshift(np.fft.irfftn(dens_field_fft * self.greens_fft)[:self.size,:self.size,:self.size]) #Convolving the density field with the potential for a particle
+    def get_potential(self,dens_field): 
+        dens_field_fft = np.fft.rfftn(dens_field)
+        potential = np.fft.irfftn((dens_field_fft * self.greens_fft))
         potential = 0.5*(np.roll(potential,1,axis=0)+potential)
         potential = 0.5*(np.roll(potential,1,axis=1)+potential)
         potential = 0.5*(np.roll(potential,1,axis=2)+potential)
@@ -109,11 +102,43 @@ class Nbody:
         return potential
 
     def get_forces(self,potential):
-        #We can calculate the gradient as f'(x) = f(x+dx) - f(x-dx) / 2dx which gives us the following
-        self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.grid
-        self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.grid
-        self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.grid
-        print(max(abs(np.ravel(self.Fx))),max(abs(np.ravel(self.potential))))
+        #We can calculate the gradient as f'(x) = f(x+dx) - f(x-dx) / 2dx which gives us the following:
+        if self.bc_type == "periodic":
+            self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0)) * self.grid
+            self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1)) * self.grid
+            self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.grid
+        else: #we want to pad our potential if it's a normal boundary so that there is no crossover when rolling, hence only need 1 pad each side
+            n = 1
+            potential = np.pad(potential, [n,n])
+            self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0))[n:-n,n:-n,n:-n] * self.grid
+            self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1))[n:-n,n:-n,n:-n] * self.grid
+            self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2))[n:-n,n:-n,n:-n] * self.grid
+
+        """#for plotting
+        edges_x = self.edges[0]
+        edges_y = self.edges[1]
+        edges_z = self.edges[2]
+        fig,ax = plt.subplots(figsize=(10,10), dpi=100) 
+        im = ax.imshow(
+            self.potential.sum(axis=2),
+            origin="lower",
+            extent=(edges_y.min(), edges_y.max(), edges_x.min(), edges_x.max()), 
+            aspect="auto"
+        )
+        fig.colorbar(im, orientation='horizontal')
+        # A bit backwards, but need to be careful of coordinate definitions when collapsing...
+        # When in doubt, just plot the histogram and double check the position of your points!
+        ax.set_xlabel("y")
+        ax.set_ylabel("x")
+        minor_ticks_x = edges_x
+        minor_ticks_y = edges_y
+        ax.set(xlim=(minor_ticks_y[0], minor_ticks_y[-1]), ylim=(minor_ticks_x[0], minor_ticks_x[-1]))
+        ax.set_xticks(minor_ticks_y, minor=True)
+        ax.set_yticks(minor_ticks_x, minor=True)
+        # Add a grid
+        ax.grid(which='both', alpha=0.75, color='w')
+        #plt.savefig("greens.png")
+        plt.show()"""
 
     def energy(self):
         #Calculate the energy of the system at each stage
@@ -135,31 +160,30 @@ class Nbody:
         dens = self.get_dens_field()
         pot = self.get_potential(dens)
         self.get_forces(pot)
-        self.acc_new = np.zeros([3,self.npart]) #does not need to be a self.
+        acc_new = np.zeros([3,self.npart])
+        
         #Let's try np.digitize
         part_indx = np.digitize(self.x,bins=self.edges[0],right=True)
         part_indy = np.digitize(self.y,bins=self.edges[1],right=True)
         part_indz = np.digitize(self.z,bins=self.edges[2],right=True)
-        self.acc_new[:][0] = self.Fx[part_indx, part_indy, part_indz]/self.m
-        self.acc_new[:][1] = self.Fy[part_indx, part_indy, part_indz]/self.m
-        self.acc_new[:][2] = self.Fz[part_indx, part_indy, part_indz]/self.m
+        acc_new[:][0] = self.Fx[part_indx, part_indy, part_indz]/self.m
+        acc_new[:][1] = self.Fy[part_indx, part_indy, part_indz]/self.m
+        acc_new[:][2] = self.Fz[part_indx, part_indy, part_indz]/self.m
 
-        self.r, self.v = self.leap_frog(self.r, self.v, self.acc, self.acc_new, self.dt)
+        self.r, self.v = self.leap_frog(self.r, self.v, self.acc, acc_new, self.dt)
         #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
         if self.bc_type == "periodic":
             self.r = self.r % (self.size-1)
         if self.bc_type == "normal":
-            ind_top = np.argwhere((self.r > self.size -1))
+            ind_top = np.argwhere((self.r > self.size-1))
             ind_bot = np.argwhere((self.r < 0))
             ind = [i for i in np.append(ind_top,ind_bot)]
             self.v = np.delete(self.v,ind,axis=1)
-            self.acc_new = np.delete(self.acc_new,ind,axis=1)
-            self.m = np.delete(self.m,ind,axis=0)
+            acc_new = np.delete(acc_new,ind,axis=1)
+            self.m = np.delete(self.m,ind)
             self.r = np.delete(self.r,ind,axis=1)
             self.acc = np.delete(self.acc,ind,axis=1)
             self.npart = len(self.m)
-        self.acc = self.acc_new.copy() #Change the value of a
+        self.acc = acc_new.copy() #Change the value of a
         self.x, self.y, self.z = self.r[0].copy(), self.r[1].copy(), self.r[2].copy()
         self.vx, self.vy, self.vz = self.v[0].copy(), self.v[1].copy(), self.v[2].copy()
-
-#Create some stuff with numba so that it runs faster here

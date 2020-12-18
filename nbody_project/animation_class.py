@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from nbody_class import Nbody
 from matplotlib import gridspec
+import decimal
 
 #------------------------------------------------------------------------------
 # Making a class to produce a constant evolving plot of the nBody simulation from class Nbody. This will be the only classs that needs to be called 
@@ -17,10 +18,10 @@ class Animation:
     INPUT PARAMETERS:
     -----------
     r : array-like
-        The position of the particles as r = [x,y,z]. Can also be set to 0 if you want uniform random integer positions generated between 0 and the size of the grid.
+        The position of the particles as r = [x,y,z]. Can also be set to 0 if you want uniform random integer positions generated between 0 and the size of the grid-1.
 
     v : array-like
-        The velocities of the particles as v = [vx,vy,vz]. Can also be set to 0 if you want uniform random integer velocities generated between -1 and 1.
+        The velocities of the particles as v = [vx,vy,vz]. Can also be set to 0 if you want your initial velocities to just be an array of 0's.
 
     m : array-like
         The mass of the particles (set to 1 for all particles for ease, but can be changed).
@@ -72,7 +73,7 @@ class Animation:
                     print("An exception occurred: r is not of the form np.ndarray")
                     quit()
         else:
-            self.r = np.random.randint(0,self.size,size=(3,self.npart))
+            self.r = np.random.randint(0,self.size-1,size=(3,self.npart))
         
         if len(v) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
@@ -84,29 +85,34 @@ class Animation:
                     print("An exception occurred: v is not of the form np.ndarray")
                     quit()
         else:
-            self.v = np.random.randint(-1,2,size=(3,self.npart))        
+            self.v = np.zeros([3,self.npart])        
 
         #Call the class Nbody with our current settings
         self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type, self.early_universe)
 
     def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation, scale opacity by density
-        #tf.reset_default_graph()
+        #for i in np.arange(0,time,self.dt):
+        #    self.particles.evolve_system()
         plt.ion()
         fig=plt.figure(figsize=(6,6))#Create 3D axes
         gs = gridspec.GridSpec(ncols=1,nrows=2,figure=fig,height_ratios=[2,1])
         ax=fig.add_subplot(gs[0],projection="3d",autoscale_on=False)
         ax2=fig.add_subplot(gs[1])
         times = list(np.arange(0,time,self.dt))
+        dt = decimal.Decimal(str(self.dt))
+        dps = abs(dt.as_tuple().exponent)
+        f = "{:."+str(dps)+"f}"
         for i in times:
             self.particles.evolve_system()
             ax.clear()
-            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=0.02,alpha=0.2) #change the size depending on number of particles you have
+            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=20,alpha=1) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)
-            ax.set_xlabel("x",fontsize=14)
-            ax.set_ylabel("y",fontsize=14)
-            ax.set_zlabel("z",fontsize=14)
+            ax.set_xlabel("x",fontsize=11)
+            ax.set_ylabel("y",fontsize=11)
+            ax.set_zlabel("z",fontsize=11)
+            ax.set_title("Time "+f.format(i),fontsize=12)
 
             #Plotting energy
             self.particles.energy()
@@ -117,9 +123,9 @@ class Animation:
             ax2.plot(times[0:inds],self.particles.karray[0:inds],"r-",label="Kinetic Energy")
             ax2.plot(times[0:inds],self.particles.parray[0:inds],"b-",label="Potential Energy")
             ax2.plot(times[0:inds],self.particles.tarray[0:inds],"k-",label="Total Energy")
-            ax2.set_xlabel("Time",fontsize=14)
-            ax2.set_ylabel("Energy",fontsize=14)
-            ax2.legend(loc="upper right",fontsize=10)
+            ax2.set_xlabel("Time",fontsize=11)
+            ax2.set_ylabel("Energy",fontsize=11)
+            ax2.legend(loc="upper right",fontsize=8)
             plt.draw()
             plt.pause(0.01)
 
