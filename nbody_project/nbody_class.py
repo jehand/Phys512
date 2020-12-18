@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import mass_class
 
 #------------------------------------------------------------------------------
 # The first step is to design my own n-body class. I want to go about this using a Leapfrog scheme with a softened potential whereby under a certain 
@@ -14,10 +15,10 @@ class Nbody:
     INPUT PARAMETERS:
     -----------
     r : array-like
-        The position of the particles as r = [x,y,z]. Can also be set to 0 if you want uniform random integer positions generated between 0 and the size of the grid.
+        The position of the particles as r = [x,y,z]. 
 
     v : array-like
-        The velocities of the particles as v = [vx,vy,vz]. Can also be set to 0 if you want uniform random integer velocities generated between -1 and 1.
+        The velocities of the particles as v = [vx,vy,vz].
 
     m : array-like
         The mass of the particles (set to 1 for all particles for ease, but can be changed).
@@ -62,6 +63,9 @@ class Nbody:
         self.vx, self.vy, self.vz = self.v[0], self.v[1], self.v[2]
         self.acc = np.zeros([3,self.npart])
         self.early_universe = early_universe
+        if self.early_universe: #Determine the masses according to this k^-3 power law
+            mass = 
+
         self.greens = self.Greens_function()
         self.greens_fft = np.fft.rfftn(self.greens)
         
@@ -70,18 +74,9 @@ class Nbody:
         self.tarray = [] #Defining array for Total Energy
 
     def Greens_function(self):
-        if self.early_universe:
-            kx = np.fft.rfft(self.x)
-            ky = np.fft.rfft(self.y)
-            kz = np.fft.rfft(self.z)
-            norm = 4*np.pi*self.G*np.sqrt(kx**2 + ky**2 + kz**2 + self.softening**2)
-            norm[norm<self.softening] = 4*np.pi*self.G*self.softening
-            k = np.sqrt(kx**2 + ky**2 + kz**2)
-            self.m *= k**(-3)
-        else:
-            ticks = np.arange(self.size)
-            kx,ky,kz = np.array(np.meshgrid(ticks,ticks,ticks)) + 0.5 - self.size/2 #to center the function
-            norm = 4*np.pi*self.G*np.sqrt(kx**2+ky**2+kz**2+self.softening**2)
+        ticks = np.arange(self.size)
+        kx,ky,kz = np.array(np.meshgrid(ticks,ticks,ticks)) + 0.5 - self.size/2 #to center the function
+        norm = 4*np.pi*self.G*np.sqrt(kx**2+ky**2+kz**2+self.softening**2)
         greens = -1/(norm)
         greens += np.flip(greens,0)
         greens += np.flip(greens,1)
@@ -96,7 +91,7 @@ class Nbody:
     def get_potential(self): 
         dens_field_fft = np.fft.rfftn(self.grid)
         potential = np.fft.irfftn(self.greens_fft*dens_field_fft)
-        potential = 0.5*(np.roll(potential,1,axis=0)+potential)
+        potential = 0.5*(np.roll(potential,1,axis=0)+potential) #to center our potential in the middle of the grid
         potential = 0.5*(np.roll(potential,1,axis=1)+potential)
         potential = 0.5*(np.roll(potential,1,axis=2)+potential)
         self.potential = potential.copy()
@@ -164,21 +159,20 @@ class Nbody:
         acc_new = np.zeros([3,self.npart])
 
         #Let's try np.digitize
-        part_indx = np.digitize(self.x,bins=self.edges[0],right=True)
-        part_indy = np.digitize(self.y,bins=self.edges[1],right=True)
-        part_indz = np.digitize(self.z,bins=self.edges[2],right=True)
-        acc_new[:][0] = self.Fx[part_indx, part_indy, part_indz]/self.m
-        acc_new[:][1] = self.Fy[part_indx, part_indy, part_indz]/self.m
-        acc_new[:][2] = self.Fz[part_indx, part_indy, part_indz]/self.m
-
-        print(acc_new)
+        part_indx = np.digitize(np.floor(self.x),bins=self.edges[0],right=True)
+        part_indy = np.digitize(np.floor(self.y),bins=self.edges[1],right=True)
+        part_indz = np.digitize(np.floor(self.z),bins=self.edges[2],right=True)
+        acc_new[0][:] = self.Fx[part_indx, part_indy, part_indz]/self.m
+        acc_new[1][:] = self.Fy[part_indx, part_indy, part_indz]/self.m
+        acc_new[2][:] = self.Fz[part_indx, part_indy, part_indz]/self.m
+        
+        #print(acc_new)
         self.r, self.v = self.leap_frog(self.r, self.v, self.acc, acc_new, self.dt)
-        #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
-        if self.bc_type == "periodic":
+        if self.bc_type == "periodic": #For periodic B.C's, we take the modulo so that it appears on the other side of the grid.
             self.r = self.r % (self.size-1)
-        if self.bc_type == "normal":
-            ind_top = np.argwhere((self.r > self.size-1))
-            ind_bot = np.argwhere((self.r < 0))
+        if self.bc_type == "normal": #For non-periodic boundary conditions we want to remove the particles that leave the grid
+            ind_top = np.argwhere(self.r >= self.size)
+            ind_bot = np.argwhere(self.r < 0)
             ind = [i for i in np.append(ind_top,ind_bot)]
             self.v = np.delete(self.v,ind,axis=1)
             acc_new = np.delete(acc_new,ind,axis=1)

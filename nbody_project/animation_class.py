@@ -102,24 +102,28 @@ class Animation:
         dt = decimal.Decimal(str(self.dt))
         dps = abs(dt.as_tuple().exponent)
         f = "{:."+str(dps)+"f}"
-        #For part 2 we want to draw circles in the plane
-        theta = np.linspace(0,2*np.pi,1000)
-        x = np.cos(theta) + self.size//2
-        y = np.sin(theta) + self.size//2
+        #For part 2 we want to draw a circle in the plane that should represent the orbit
+        #theta = np.linspace(0,2*np.pi,1000)
+        #r = abs(self.r[1][1] - self.r[1][0])/2
+        #x = r*np.cos(theta) + self.size/2
+        #y = r*np.sin(theta) + self.size/2
 
         for i in times:
             self.particles.evolve_system()
             self.particles.energy()
             ax.clear()
-            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=20,alpha=1) #change the size depending on number of particles you have
+            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=.02,alpha=.3) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)
             ax.set_xlabel("x",fontsize=11)
             ax.set_ylabel("y",fontsize=11)
             ax.set_zlabel("z",fontsize=11)
-            ax.set_title("Time "+f.format(i),fontsize=12)
-            ax.plot(x,y,self.size//2,"r-")
+            ax.set_title("Time "+f.format(i),fontsize=12,pad=10)
+            ax.grid(False)
+            
+            #ax.plot(x,y,self.size//2,"r-")
+            #ax.view_init(35,-45)
 
             #Plotting energy
             inds = times.index(i)+1
@@ -131,9 +135,9 @@ class Animation:
             ax2.plot(times[0:inds],self.particles.tarray[0:inds],"k-",label="Total Energy")
             ax2.set_xlabel("Time",fontsize=11)
             ax2.set_ylabel("Energy",fontsize=11)
-            ax2.legend(loc="upper right",fontsize=8)
+            ax2.legend(loc="center right",fontsize=8)
             plt.draw()
             plt.pause(0.01)
 
             if save_plt:
-                plt.savefig("figures/part1/fig"+str(inds)+".png",bbox_inches="tight")
+                plt.savefig("images/part4/fig"+str(inds)+".png",bbox_inches="tight")
