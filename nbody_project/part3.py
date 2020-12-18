@@ -12,5 +12,5 @@ dt = 0.1
 size = 50
 G = 1 #cons.G #Importing the value of G
 
-ani = Animation(m=m,npart=npart,size=size,dt=dt,G=G,softening=0.1,bc_type="normal")
+ani = Animation(m=m,npart=npart,size=size,dt=dt,G=G,softening=0.1,bc_type="periodic")
 ani.animate(time=time,save_plt=False)

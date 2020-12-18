@@ -10,7 +10,7 @@ import decimal
 
 #------------------------------------------------------------------------------
 # Making a class to produce a constant evolving plot of the nBody simulation from class Nbody. This will be the only classs that needs to be called 
-# to run the simulation. The animation will be produced using transparent voxels from Google's TensorFlow.
+# to run the simulation. The animation will be produced using transparent voxels.
 #------------------------------------------------------------------------------
 
 class Animation:
@@ -18,7 +18,7 @@ class Animation:
     INPUT PARAMETERS:
     -----------
     r : array-like
-        The position of the particles as r = [x,y,z]. Can also be set to 0 if you want uniform random integer positions generated between 0 and the size of the grid-1.
+        The position of the particles as r = [x,y,z]. Can also be set to 0 if you want uniform random integer positions generated between 0 and the size of the grid.
 
     v : array-like
         The velocities of the particles as v = [vx,vy,vz]. Can also be set to 0 if you want your initial velocities to just be an array of 0's.
@@ -73,7 +73,7 @@ class Animation:
                     print("An exception occurred: r is not of the form np.ndarray")
                     quit()
         else:
-            self.r = np.random.randint(0,self.size-1,size=(3,self.npart))
+            self.r = np.random.randint(0,self.size,size=(3,self.npart))
         
         if len(v) != 0:
             if isinstance(r,(np.ndarray)): #Checking if is an ndarray or the code will not work
@@ -85,7 +85,7 @@ class Animation:
                     print("An exception occurred: v is not of the form np.ndarray")
                     quit()
         else:
-            self.v = np.zeros([3,self.npart])        
+            self.v = np.zeros([3,self.npart])
 
         #Call the class Nbody with our current settings
         self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type, self.early_universe)
@@ -102,8 +102,14 @@ class Animation:
         dt = decimal.Decimal(str(self.dt))
         dps = abs(dt.as_tuple().exponent)
         f = "{:."+str(dps)+"f}"
+        #For part 2 we want to draw circles in the plane
+        theta = np.linspace(0,2*np.pi,1000)
+        x = np.cos(theta) + self.size//2
+        y = np.sin(theta) + self.size//2
+
         for i in times:
             self.particles.evolve_system()
+            self.particles.energy()
             ax.clear()
             ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=20,alpha=1) #change the size depending on number of particles you have
             ax.axes.set_xlim3d(0,self.size)
@@ -113,9 +119,9 @@ class Animation:
             ax.set_ylabel("y",fontsize=11)
             ax.set_zlabel("z",fontsize=11)
             ax.set_title("Time "+f.format(i),fontsize=12)
+            ax.plot(x,y,self.size//2,"r-")
 
             #Plotting energy
-            self.particles.energy()
             inds = times.index(i)+1
             ax2.clear()
             ax2.axhline(color="black")

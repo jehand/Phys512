@@ -89,12 +89,13 @@ class Nbody:
         return greens
 
     def get_dens_field(self):
-        self.grid, self.edges = np.histogramdd([self.x,self.y,self.z], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)
-        return self.grid
+        grid, edges = np.histogramdd([self.x,self.y,self.z], bins=self.size, range=[[0,self.size],[0,self.size],[0,self.size]], weights=self.m)
+        self.grid = grid.copy()
+        self.edges = edges.copy()
 
-    def get_potential(self,dens_field): 
-        dens_field_fft = np.fft.rfftn(dens_field)
-        potential = np.fft.irfftn((dens_field_fft * self.greens_fft))
+    def get_potential(self): 
+        dens_field_fft = np.fft.rfftn(self.grid)
+        potential = np.fft.irfftn(self.greens_fft*dens_field_fft)
         potential = 0.5*(np.roll(potential,1,axis=0)+potential)
         potential = 0.5*(np.roll(potential,1,axis=1)+potential)
         potential = 0.5*(np.roll(potential,1,axis=2)+potential)
@@ -109,10 +110,10 @@ class Nbody:
             self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2)) * self.grid
         else: #we want to pad our potential if it's a normal boundary so that there is no crossover when rolling, hence only need 1 pad each side
             n = 1
-            potential = np.pad(potential, [n,n])
-            self.Fx = -0.5 * (np.roll(potential, 1, axis = 0) - np.roll(potential, -1, axis=0))[n:-n,n:-n,n:-n] * self.grid
-            self.Fy = -0.5 * (np.roll(potential, 1, axis = 1) - np.roll(potential, -1, axis=1))[n:-n,n:-n,n:-n] * self.grid
-            self.Fz = -0.5 * (np.roll(potential, 1, axis = 2) - np.roll(potential, -1, axis=2))[n:-n,n:-n,n:-n] * self.grid
+            potentialp = np.pad(potential, [[n,n],[n,n],[n,n]])
+            self.Fx = -0.5 * (np.roll(potentialp, 1, axis = 0) - np.roll(potentialp, -1, axis=0))[n:-n,n:-n,n:-n] * self.grid
+            self.Fy = -0.5 * (np.roll(potentialp, 1, axis = 1) - np.roll(potentialp, -1, axis=1))[n:-n,n:-n,n:-n] * self.grid
+            self.Fz = -0.5 * (np.roll(potentialp, 1, axis = 2) - np.roll(potentialp, -1, axis=2))[n:-n,n:-n,n:-n] * self.grid
 
         """#for plotting
         edges_x = self.edges[0]
@@ -120,7 +121,7 @@ class Nbody:
         edges_z = self.edges[2]
         fig,ax = plt.subplots(figsize=(10,10), dpi=100) 
         im = ax.imshow(
-            self.potential.sum(axis=2),
+            self.grid.sum(axis=2),
             origin="lower",
             extent=(edges_y.min(), edges_y.max(), edges_x.min(), edges_x.max()), 
             aspect="auto"
@@ -143,10 +144,10 @@ class Nbody:
     def energy(self):
         #Calculate the energy of the system at each stage
         kinetic = 0.5 * np.sum(self.m * (self.vx**2 + self.vy**2 + self.vz**2))
-        potential = -0.5 * np.sum(self.potential * self.grid) 
-        total = kinetic + potential
+        potentialen = -0.5 * np.sum(self.potential * self.grid) 
+        total = kinetic + potentialen
         self.karray.append(kinetic)
-        self.parray.append(potential)
+        self.parray.append(potentialen)
         self.tarray.append(total)
 
     def leap_frog(self,r,v,a,a_new,dt):
@@ -157,11 +158,11 @@ class Nbody:
 
     def evolve_system(self):
         #This is the function that will evolve the system
-        dens = self.get_dens_field()
-        pot = self.get_potential(dens)
+        self.get_dens_field()
+        pot = self.get_potential()
         self.get_forces(pot)
         acc_new = np.zeros([3,self.npart])
-        
+
         #Let's try np.digitize
         part_indx = np.digitize(self.x,bins=self.edges[0],right=True)
         part_indy = np.digitize(self.y,bins=self.edges[1],right=True)
@@ -170,6 +171,7 @@ class Nbody:
         acc_new[:][1] = self.Fy[part_indx, part_indy, part_indz]/self.m
         acc_new[:][2] = self.Fz[part_indx, part_indy, part_indz]/self.m
 
+        print(acc_new)
         self.r, self.v = self.leap_frog(self.r, self.v, self.acc, acc_new, self.dt)
         #Note that for non-periodic boundary conditions we want to remove the particles that leave the grid
         if self.bc_type == "periodic":
