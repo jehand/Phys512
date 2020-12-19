@@ -7,8 +7,8 @@ npart = 150000
 r = []
 v = []
 m = []
-time = 1.3
-dt = 0.005
+time = 3
+dt = 0.1
 size = 50
 G = 1 #cons.G #Importing the value of G
 

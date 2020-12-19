@@ -90,9 +90,7 @@ class Animation:
         #Call the class Nbody with our current settings
         self.particles = Nbody(self.r, self.v, self.m, self.G, self.npart, self.softening, self.size, self.dt, self.bc_type, self.early_universe)
 
-    def animate(self,time=50,save_plt=False): #Possibility of upgrades with matplotlib.animation.FuncAnimation, scale opacity by density
-        #for i in np.arange(0,time,self.dt):
-        #    self.particles.evolve_system()
+    def animate(self,time=50,save_plt=False):
         plt.ion()
         fig=plt.figure(figsize=(6,6))#Create 3D axes
         gs = gridspec.GridSpec(ncols=1,nrows=2,figure=fig,height_ratios=[2,1])
@@ -112,7 +110,12 @@ class Animation:
             self.particles.evolve_system()
             self.particles.energy()
             ax.clear()
-            ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=.02,alpha=.3) #change the size depending on number of particles you have
+            #ax.scatter(self.particles.x,self.particles.y,self.particles.z,color="royalblue",marker=".",s=.02,alpha=.3) #change the size depending on number of particles you have
+            scatt = ax.scatter(self.particles.x,self.particles.y,self.particles.z,c=self.particles.m,marker=".",s=.02,alpha=.25) #change the size depending on number of particles you have
+
+            if i==0:
+                cbar = fig.colorbar(scatt, ax=ax, shrink=0.55, pad=0.1)
+                cbar.ax.tick_params(labelsize=10)
             ax.axes.set_xlim3d(0,self.size)
             ax.axes.set_ylim3d(0,self.size)
             ax.axes.set_zlim3d(0,self.size)

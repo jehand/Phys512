@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import mass_class
+from mass_class import mass
 
 #------------------------------------------------------------------------------
 # The first step is to design my own n-body class. I want to go about this using a Leapfrog scheme with a softened potential whereby under a certain 
@@ -48,11 +48,6 @@ class Nbody:
     def __init__(self,r=[],v=[],m=[],G=1,npart=10,softening=0.1,size=50,dt=0.1,bc_type="normal",early_universe=False):
         self.G = G
         self.npart = npart
-        #Defining values for m if not provided to be 1 for each particle
-        if len(m) != 0:
-            self.m = m.copy()
-        else:
-            self.m = np.ones(self.npart)
         self.softening = softening
         self.size = size
         self.dt = dt
@@ -63,8 +58,14 @@ class Nbody:
         self.vx, self.vy, self.vz = self.v[0], self.v[1], self.v[2]
         self.acc = np.zeros([3,self.npart])
         self.early_universe = early_universe
-        if self.early_universe: #Determine the masses according to this k^-3 power law
-            mass = 
+        if len(m) != 0:
+            self.m = m.copy()
+        else:
+            if self.early_universe: #Determine the masses according to this k^-3 power law
+                masses = mass(self.r,self.npart,self.size)
+                self.m = masses.find_m()
+            else: #Defining values for m if not provided to be 1 for each particle
+                self.m = np.ones(self.npart) 
 
         self.greens = self.Greens_function()
         self.greens_fft = np.fft.rfftn(self.greens)
@@ -78,7 +79,7 @@ class Nbody:
         kx,ky,kz = np.array(np.meshgrid(ticks,ticks,ticks)) + 0.5 - self.size/2 #to center the function
         norm = 4*np.pi*self.G*np.sqrt(kx**2+ky**2+kz**2+self.softening**2)
         greens = -1/(norm)
-        greens += np.flip(greens,0)
+        greens += np.flip(greens,0) #applying our green function to each corner of our grid equally.
         greens += np.flip(greens,1)
         greens += np.flip(greens,2) 
         return greens
@@ -91,7 +92,7 @@ class Nbody:
     def get_potential(self): 
         dens_field_fft = np.fft.rfftn(self.grid)
         potential = np.fft.irfftn(self.greens_fft*dens_field_fft)
-        potential = 0.5*(np.roll(potential,1,axis=0)+potential) #to center our potential in the middle of the grid
+        potential = 0.5*(np.roll(potential,1,axis=0)+potential) #to center our potential in the middle of the grid/cells
         potential = 0.5*(np.roll(potential,1,axis=1)+potential)
         potential = 0.5*(np.roll(potential,1,axis=2)+potential)
         self.potential = potential.copy()
@@ -109,32 +110,6 @@ class Nbody:
             self.Fx = -0.5 * (np.roll(potentialp, 1, axis = 0) - np.roll(potentialp, -1, axis=0))[n:-n,n:-n,n:-n] * self.grid
             self.Fy = -0.5 * (np.roll(potentialp, 1, axis = 1) - np.roll(potentialp, -1, axis=1))[n:-n,n:-n,n:-n] * self.grid
             self.Fz = -0.5 * (np.roll(potentialp, 1, axis = 2) - np.roll(potentialp, -1, axis=2))[n:-n,n:-n,n:-n] * self.grid
-
-        """#for plotting
-        edges_x = self.edges[0]
-        edges_y = self.edges[1]
-        edges_z = self.edges[2]
-        fig,ax = plt.subplots(figsize=(10,10), dpi=100) 
-        im = ax.imshow(
-            self.grid.sum(axis=2),
-            origin="lower",
-            extent=(edges_y.min(), edges_y.max(), edges_x.min(), edges_x.max()), 
-            aspect="auto"
-        )
-        fig.colorbar(im, orientation='horizontal')
-        # A bit backwards, but need to be careful of coordinate definitions when collapsing...
-        # When in doubt, just plot the histogram and double check the position of your points!
-        ax.set_xlabel("y")
-        ax.set_ylabel("x")
-        minor_ticks_x = edges_x
-        minor_ticks_y = edges_y
-        ax.set(xlim=(minor_ticks_y[0], minor_ticks_y[-1]), ylim=(minor_ticks_x[0], minor_ticks_x[-1]))
-        ax.set_xticks(minor_ticks_y, minor=True)
-        ax.set_yticks(minor_ticks_x, minor=True)
-        # Add a grid
-        ax.grid(which='both', alpha=0.75, color='w')
-        #plt.savefig("greens.png")
-        plt.show()"""
 
     def energy(self):
         #Calculate the energy of the system at each stage
